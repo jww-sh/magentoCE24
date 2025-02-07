@@ -1,6 +1,6 @@
 {
-    "name": "magento/project-community-edition",
-    "description": "Adobe Commerce 2.4.X (Community Edition)",
+    "name": "mage-os/project-community-edition",
+    "description": "Mage OS 1.0.*",
     "type": "project",
     "license": [
         "OSL-3.0",
@@ -17,9 +17,8 @@
     },
     "require": {
         "magento/ece-tools": "^2002",
-        "magento/product-community-edition": "^2.4",
+        "mage-os/product-community-edition": "^1.0",
         "fastly/magento2": "*",
-        "magento/composer-root-update-plugin": "*",
         "markshust/magento2-module-disabletwofactorauth": "*",
         "n98/magerun2-dist": "*"
     },
@@ -65,7 +64,7 @@
     "repositories": [
         {
             "type": "composer",
-            "url": "https://mirror.mage-os.org/"
+            "url": "https://repo.mage-os.org/"
         },
         {
             "type": "vcs",
