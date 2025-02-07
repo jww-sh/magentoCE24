@@ -95,7 +95,7 @@ applications:
               composer install --no-dev --no-interaction
               php ./vendor/bin/ece-tools run scenario/build/generate.xml
               php ./vendor/bin/ece-tools run scenario/build/transfer.xml
-              sed -i 's/_process>1<\/use_/_process>0<\/use_/g' ${PLATFORM_APP_DIR}/vendor/magento/*/etc/cron_groups.xml
+              sed -i 's/_process>1<\/use_/_process>0<\/use_/g' ${PLATFORM_APP_DIR}/vendor/mage*/*/etc/cron_groups.xml
             deploy: |
               php ./vendor/bin/ece-tools run scenario/deploy.xml
             post_deploy: |
