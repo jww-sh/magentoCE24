@@ -1,9 +1,11 @@
 # Add hostnames, IP addresses and subnets that are allowed to purge content
+#https://docs.platform.sh/development/regions.html#:~:text=52.208.123.9,52.30.200.164
 acl purge {
     "localhost";
     "127.0.0.1";
-    "127.0.0.1";
-    "249.0.0.0/8";
+    "52.214.63.84";
+    "52.208.123.9";
+    "52.30.200.164";
 }
 
 sub vcl_recv {
