@@ -170,7 +170,7 @@ services:
             maxmemory_policy: allkeys-lru
     
     indexer:
-        type: opensearch:3
+        type: opensearch:2
         configuration:
             plugins:
                 - analysis-phonetic
