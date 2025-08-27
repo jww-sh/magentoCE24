@@ -182,7 +182,6 @@ sub vcl_deliver {
         set resp.http.X-Magento-Cache-Debug = "UNCACHEABLE";
     } else if (obj.hits) {
         set resp.http.X-Magento-Cache-Debug = "HIT";
-        set resp.http.Grace = req.http.grace;
     } else {
         set resp.http.X-Magento-Cache-Debug = "MISS";
     }
