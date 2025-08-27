@@ -189,22 +189,32 @@ services:
                 - analysis-icu
     queue:
         type: rabbitmq:4.1
+        
+    varnish:
+        type: varnish:7.3
+            relationships:
+                application: 'app:http'
+        configuration:
+            vcl: !include
+            type: string
+            path: varnish.vcl
+            
 routes:
     https://{default}/:
         type: upstream
-        upstream: app:http
+        upstream: varnish:http
     https://{default}/static/:
         type: upstream
-        upstream: app:http
+        upstream: varnish:http
         cache:
             enabled: true
             cookies: []
     https://{all}/:
         type: upstream
-        upstream: app:http
+        upstream: varnish:http
     https://{all}/static/:
         type: upstream
-        upstream: app:http
+        upstream: varnish:http
         cache:
             enabled: true
             cookies: []
