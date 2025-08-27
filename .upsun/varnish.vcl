@@ -115,7 +115,7 @@ sub vcl_recv {
     if (req.url ~ "^/(pub/)?media/") {
         if ( 0 ) { # TODO MAKE CONFIGURABLE: Cache media files
             unset req.http.Https;
-            unset req.http./* {{ ssl_offloaded_header }} */;
+            unset req.http.x-forwarded-proto;
             unset req.http.Cookie;
         } else {
             return (pass);
@@ -126,7 +126,7 @@ sub vcl_recv {
     if (req.url ~ "^/(pub/)?static/") {
         if ( 0 ) { # TODO MAKE CONFIGURABLE: Cache static files
             unset req.http.Https;
-            unset req.http./* {{ ssl_offloaded_header }} */;
+            unset req.http.x-forwarded-proto;
             unset req.http.Cookie;
         } else {
             return (pass);
@@ -147,7 +147,7 @@ sub vcl_hash {
     }
 
     # To make sure http users don't see ssl warning
-    hash_data(req.http./* {{ ssl_offloaded_header }} */);
+    hash_data(req.http.x-forwarded-proto);
 
     /* {{ design_exceptions_code }} */
 
