@@ -33,12 +33,7 @@ sub vcl_recv {
         set req.url = std.querysort(req.url);
     }
 
-    # Reduce grace to the configured setting if the backend is healthy
-    # In case of an unhealthy backend, the original grace is used
-    if (std.healthy(req.backend_hint)) {
-        set req.grace = /* {{ grace_period }} */s;
-    }
-    
+  
     # Purge logic to remove objects from the cache
     # Tailored to Magento's cache invalidation mechanism
     # The X-Magento-Tags-Pattern value is matched to the tags in the X-Magento-Tags header
