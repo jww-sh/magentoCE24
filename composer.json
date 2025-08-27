@@ -21,7 +21,8 @@
         "fastly/magento2": "*",
         "magento/composer-root-update-plugin": "*",
         "markshust/magento2-module-disabletwofactorauth": "*",
-        "n98/magerun2-dist": "*"
+        "n98/magerun2-dist": "*",
+        "siteation/magento2-pagespeed": "*"
     },
     "autoload": {
         "exclude-from-classmap": [
