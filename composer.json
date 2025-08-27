@@ -22,7 +22,7 @@
         "magento/composer-root-update-plugin": "*",
         "markshust/magento2-module-disabletwofactorauth": "*",
         "n98/magerun2-dist": "*",
-        "mage/fpc": "*"
+        "colinmollenhour/cm_diehard": "*"
     },
     "autoload": {
         "exclude-from-classmap": [
