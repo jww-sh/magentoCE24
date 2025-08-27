@@ -152,7 +152,7 @@ applications:
             root: /
 services:
     db:
-        type: mariadb:10.11
+        type: mariadb:11.4
         configuration:
           properties:
             optimizer_switch: "rowid_filter=off"
