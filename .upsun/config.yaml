@@ -1,7 +1,7 @@
 applications:
     app:
         # The runtime the application uses.
-        type: php:8.3
+        type: php:8.4
         # Specify additional PHP extensions that should be loaded.
         runtime:
             extensions:
@@ -152,7 +152,7 @@ applications:
             root: /
 services:
     db:
-        type: mariadb:10.6
+        type: mariadb:10.11
         configuration:
           properties:
             optimizer_switch: "rowid_filter=off"
@@ -172,23 +172,23 @@ services:
                 main: ro
     
     cache:
-        type: redis:7.2
+        type: valkey:8.0
         configuration:
             maxmemory_policy: allkeys-lru
     
     session:
-        type: redis-persistent:7.2
+        type: valkey-persistent:8.0
         configuration:
             maxmemory_policy: allkeys-lru
     
     indexer:
-        type: opensearch:2
+        type: opensearch:3
         configuration:
             plugins:
                 - analysis-phonetic
                 - analysis-icu
     queue:
-        type: rabbitmq:3.13
+        type: rabbitmq:4.1
 routes:
     https://{default}/:
         type: upstream
