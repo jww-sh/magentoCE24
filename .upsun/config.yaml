@@ -26,7 +26,7 @@ applications:
                 MAGENTO_INDEXER_BATCH_SIZE__INVENTORY__SIMPLE: 210
                 MAGENTO_INDEXER_BATCH_SIZE__INVENTORY__DEFAULT: 510
                 MAGENTO_INDEXER_BATCH_SIZE__INVENTORY__CONFIGURABLE: 616
-                CONFIG__DEFAULT__SYSTEM__FULL_PAGE_CACHE__CACHING_APPLICATION 2:
+                CONFIG__DEFAULT__SYSTEM__FULL_PAGE_CACHE__CACHING_APPLICATION: 2
             php:
                 memory_limit: "512M"
         # Configuration of the build of this application.
