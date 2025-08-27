@@ -196,8 +196,8 @@ services:
                 application: 'app:http'
         configuration:
             vcl: !include
-              type: string
-              path: varnish.vcl
+                type: string
+                path: varnish.vcl
             
 routes:
     https://{default}/:
