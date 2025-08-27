@@ -12,6 +12,10 @@ acl purge {
 
 
 sub vcl_recv {
+
+    set req.backend_hint = application.backend();
+
+
     # Add support for Prismic preview functionality
     if (req.http.Cookie ~ "io.prismic.preview") {
         return (pass);
