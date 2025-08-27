@@ -55,7 +55,7 @@ sub vcl_recv {
 
         # Full Page Cache flush
         if (req.http.X-Magento-Tags-Pattern == ".*") {
-            if (0) { # CONFIGURABLE: soft purge
+            if (1) { # CONFIGURABLE: soft purge
                 set req.http.n-gone = xkey.softpurge("all");
             } else {
                 set req.http.n-gone = xkey.purge("all");
@@ -118,7 +118,7 @@ sub vcl_recv {
 
     # Media files caching
     if (req.url ~ "^/(pub/)?media/") {
-        if ( 0 ) { # TODO MAKE CONFIGURABLE: Cache media files
+        if ( 1 ) { # TODO MAKE CONFIGURABLE: Cache media files
             unset req.http.Https;
             unset req.http.x-forwarded-proto;
             unset req.http.Cookie;
@@ -129,7 +129,7 @@ sub vcl_recv {
 
     # Static files caching
     if (req.url ~ "^/(pub/)?static/") {
-        if ( 0 ) { # TODO MAKE CONFIGURABLE: Cache static files
+        if ( 1 ) { # TODO MAKE CONFIGURABLE: Cache static files
             unset req.http.Https;
             unset req.http.x-forwarded-proto;
             unset req.http.Cookie;
@@ -181,9 +181,9 @@ sub process_graphql_headers {
 }
 
 sub vcl_backend_response {
-    # Serve stale content for three days after object expiration
+    # Serve stale content for 10 minutes after object expiration
     # Perform asynchronous revalidation while stale content is served
-    set beresp.grace = 1d;
+    set beresp.grace = 10m;
 
     if (beresp.http.X-Magento-Tags) {
         # set comma separated xkey with "all" tag
@@ -232,7 +232,7 @@ sub vcl_deliver {
     # Let browser and Cloudflare cache non-static content that are cacheable for short period of time
     if (resp.http.Cache-Control !~ "private" && req.url !~ "^/(media|static)/" && obj.ttl > 0s) {
         set resp.http.Cache-Control = "must-revalidate, max-age=60";
-        if ( 0 ) { # TODO MAKE CONFIGURABLE: Enable/disable backward-forward cache (default enabled)
+        if ( 1 ) { # TODO MAKE CONFIGURABLE: Enable/disable backward-forward cache (default enabled)
             set resp.http.Cache-Control = resp.http.Cache-Control + ", no-store";
         }
     }
