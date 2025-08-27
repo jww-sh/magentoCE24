@@ -49,9 +49,7 @@ sub vcl_recv {
     
     # Reduce grace to the configured setting if the backend is healthy
     # In case of an unhealthy backend, the original grace is used
-    if (std.healthy(req.backend_hint)) {
-        set req.grace = 60s;
-    }
+    set req.grace = 120s;
     
     # Purge logic to remove objects from the cache
     # Tailored to Magento's cache invalidation mechanism
