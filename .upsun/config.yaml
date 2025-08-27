@@ -203,18 +203,6 @@ routes:
     https://{default}/:
         type: upstream
         upstream: varnish:http
-    https://{default}/static/:
-        type: upstream
-        upstream: varnish:http
-        cache:
-            enabled: true
-            cookies: []
     https://{all}/:
         type: upstream
         upstream: varnish:http
-    https://{all}/static/:
-        type: upstream
-        upstream: varnish:http
-        cache:
-            enabled: true
-            cookies: []
