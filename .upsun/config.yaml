@@ -191,9 +191,9 @@ services:
         type: rabbitmq:4.1
         
     varnish:
-        type: varnish:7.3
-            relationships:
-                application: 'app:http'
+        type: varnish:7.6
+        relationships:
+            application: 'app:http'
         configuration:
             vcl: !include
                 type: string
