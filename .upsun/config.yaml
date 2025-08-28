@@ -147,6 +147,7 @@ services:
             optimizer_use_condition_selectivity: 1
             query_cache_size: 0
             query_cache_type: 0
+            long_query_time: "10.0"
           schemas:
             - main
           endpoints:
@@ -171,10 +172,10 @@ services:
     
     indexer:
         type: opensearch:3
-        #configuration:
-        #    plugins:
-        #        - analysis-phonetic
-        #        - analysis-icu
+        configuration:
+            plugins:
+                - analysis-phonetic
+                - analysis-icu
     queue:
         type: rabbitmq:4.1
         
