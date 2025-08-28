@@ -51,7 +51,7 @@ applications:
                 source: storage
                 source_path: "var"
             "/var/log":
-                source: instance
+                source: storage # can be instance but you may lose logs during autoscaling 
                 source_path: "log"
             "/app/etc":
                 source: storage
