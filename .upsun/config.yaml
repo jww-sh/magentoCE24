@@ -1,5 +1,7 @@
 applications:
     app:
+        # https://docs.upsun.com/manage-resources/adjust-resources.html#adjust-a-container-profile
+        container_profile: BALANCED 
         # The runtime the application uses.
         type: php:8.4
         # Specify additional PHP extensions that should be loaded.
@@ -161,11 +163,15 @@ services:
                 main: ro
     
     cache:
+        # https://docs.upsun.com/manage-resources/adjust-resources.html#adjust-a-container-profile
+        container_profile: HIGH_MEMORY
         type: valkey:8.0
         configuration:
             maxmemory_policy: allkeys-lru
     
     session:
+        # https://docs.upsun.com/manage-resources/adjust-resources.html#adjust-a-container-profile
+        container_profile: HIGH_MEMORY
         type: valkey-persistent:8.0
         configuration:
             maxmemory_policy: allkeys-lru
