@@ -18,7 +18,7 @@ sub vcl_recv {
     }
 
     if (req.method == "PURGE") {
-        if (client.ip !~ purge) {
+        if (!std.ip(req.http.X-Client-IP, "0.0.0.0") ~ purge) {
             return (synth(405, "Method not allowed"));
         }
         # To use the X-Pool header for purging varnish during automated deployments, make sure the X-Pool header
