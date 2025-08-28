@@ -18,7 +18,6 @@
     "require": {
         "magento/ece-tools": "^2002",
         "magento/product-community-edition": "^2.4",
-        "fastly/magento2": "*",
         "magento/composer-root-update-plugin": "*",
         "markshust/magento2-module-disabletwofactorauth": "*",
         "n98/magerun2-dist": "*",
