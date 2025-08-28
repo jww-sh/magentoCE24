@@ -109,7 +109,7 @@ applications:
                     passthru: "/index.php"
                     index:
                         - index.php
-                    expires: -1
+                    #expires: -1
                     scripts: true
                     allow: false
                     rules:
@@ -125,13 +125,13 @@ applications:
                     root: "pub/media"
                     allow: true
                     scripts: false
-                    expires: 1y
+                    expires: 7d
                     passthru: "/get.php"
                 "/static":
                     root: "pub/static"
                     allow: true
                     scripts: false
-                    expires: 1y
+                    expires: 7d
                     passthru: "/front-static.php"
                     rules:
                         ^/static/version\d+/(?<resource>.*)$:
@@ -170,11 +170,11 @@ services:
             maxmemory_policy: allkeys-lru
     
     indexer:
-        type: opensearch:2
-        configuration:
-            plugins:
-                - analysis-phonetic
-                - analysis-icu
+        type: opensearch:3
+        #configuration:
+        #    plugins:
+        #        - analysis-phonetic
+        #        - analysis-icu
     queue:
         type: rabbitmq:4.1
         
