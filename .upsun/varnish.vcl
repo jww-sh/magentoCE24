@@ -134,8 +134,8 @@ sub vcl_recv {
         }
     }
 
-    # Don't cache the authenticated GraphQL or Admin requests
-    if ((req.url ~ "/graphql" || req.url ~ "/admin" ) && req.http.Authorization ~ "^Bearer") {
+    # Don't cache the authenticated GraphQL or requests
+    if (req.url ~ "/graphql" && req.http.Authorization ~ "^Bearer") {
         return (pass);
     }
 
