@@ -198,3 +198,14 @@ routes:
         upstream: varnish:http
         cache:
            enabled: false
+    #http for purge       
+    http://{default}/:
+        type: upstream
+        upstream: varnish:http
+        cache:
+           enabled: false
+    http://{all}/:
+        type: upstream
+        upstream: varnish:http
+        cache:
+           enabled: false
