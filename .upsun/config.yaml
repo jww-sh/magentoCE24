@@ -95,8 +95,8 @@ applications:
             queue:
                 commands:
                     start: |
-                        bash -c 'for consumername in $(php ./bin/magento queue:consumers:list); do echo -e Running consumer  ${consumername} ... && bin/magento queue:consumers:start --max-messages=50 ${consumername}; done'
-                        bin/magento cron:run
+                        bash -c 'for consumername in $(php ./bin/magento queue:consumers:list); do echo -e `date` - Running consumer  ${consumername} ... && bin/magento queue:consumers:start --max-messages=50 ${consumername}; done'
+                        bash -c 'echo -e `date` - Running cron && bin/magento cron:run'
         crons:
             logrotate:
                 spec: "45 1 * * *"
