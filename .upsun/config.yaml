@@ -91,10 +91,15 @@ applications:
             post_deploy: |
               php ./vendor/bin/ece-tools run scenario/post-deploy.xml
         # The configuration of scheduled execution.
+        workers:
+            queue:
+                commands:
+                    start: |
+                        bash -c 'for consumername in $(php ./bin/magento queue:consumers:list); do echo -e Running consumer  ${consumername} ... && bin/magento queue:consumers:start --max-messages=50 ${consumername}; done'  
         crons:
             magento:
-                spec: "*/5 * * * *"
-                cmd: bash -c 'for group in $(grep -shoP "(?<=<group id=\")(.+)(?=\">)" {app,vendor}/*/*/etc/cron_groups.xml); do echo -n Running cron group ${group} --- && php -d memory_limit=-1 bin/magento cron:run --group=${group}; done'
+                spec: "*/2 * * * *"
+                cmd: bin/magento cron:run
             logrotate:
                 spec: "45 1 * * *"
                 cmd: shtool rotate -n10 $PLATFORM_APP_DIR/var/log/*.log
