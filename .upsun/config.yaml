@@ -160,6 +160,7 @@ services:
               privileges:
                 main: admin
             read:
+              replication: true
               default_schema: main
               privileges:
                 main: ro
