@@ -34,7 +34,7 @@ applications:
               service: db
               endpoint: write
             database-slave: 
-              service: db
+              service: db-replica
               endpoint: read
             valkey:
                 service: cache
@@ -171,6 +171,12 @@ services:
         type: mariadb-replica:11.4
         relationships:
           primary: db:replicator
+        configuration:
+          endpoints:
+            read:
+              default_schema: main
+              privileges:
+                main: ro
     
     cache:
         # https://docs.upsun.com/manage-resources/adjust-resources.html#adjust-a-container-profile
