@@ -155,8 +155,6 @@ services:
           schemas:
             - main
           endpoints:
-            replicator:
-              replication: true    
             write:
               default_schema: main
               privileges:
