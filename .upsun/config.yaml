@@ -32,10 +32,10 @@ applications:
         relationships:
             database: 
               service: db
-              endpoint: write
+              endpoint: main
             database-slave: 
               service: db-replica
-              endpoint: read
+              endpoint: main
             valkey:
                 service: cache
                 endpoint: valkey
@@ -155,14 +155,10 @@ services:
           schemas:
             - main
           endpoints:
-            write:
+            main:
               default_schema: main
               privileges:
                 main: admin
-            read:
-              default_schema: main
-              privileges:
-                main: ro
             replicator:
               privileges:
                 main: replication
@@ -173,14 +169,10 @@ services:
           primary: db:replicator
         configuration:
           endpoints:
-            write:
+            main:
               default_schema: main
               privileges:
                 main: admin
-            read:
-              default_schema: main
-              privileges:
-                main: ro
     
     cache:
         # https://docs.upsun.com/manage-resources/adjust-resources.html#adjust-a-container-profile
