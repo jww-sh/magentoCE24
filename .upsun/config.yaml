@@ -34,8 +34,8 @@ applications:
               service: db
               endpoint: write
             database-slave: 
-              service: db-replica
-              endpoint: read
+              service: db
+              endpoint: write
             valkey:
                 service: cache
                 endpoint: valkey
