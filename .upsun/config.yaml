@@ -32,10 +32,10 @@ applications:
         relationships:
             database: 
               service: db
-              endpoint: main
+              endpoint: write
             database-slave: 
               service: db-replica
-              endpoint: main
+              endpoint: read
             valkey:
                 service: cache
                 endpoint: valkey
@@ -155,7 +155,7 @@ services:
           schemas:
             - main
           endpoints:
-            main:
+            write:
               default_schema: main
               privileges:
                 main: admin
@@ -167,11 +167,11 @@ services:
         type: mariadb-replica:11.4
         relationships:
           primary: db:replicator
-        schemas:
-          - main
         configuration:
+          schemas:
+            - main
           endpoints:
-            main:
+            read:
               default_schema: main
               privileges:
                 main: admin
