@@ -173,6 +173,10 @@ services:
           primary: db:replicator
         configuration:
           endpoints:
+            write:
+              default_schema: main
+              privileges:
+                main: admin
             read:
               default_schema: main
               privileges:
