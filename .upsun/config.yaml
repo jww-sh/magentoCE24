@@ -167,6 +167,8 @@ services:
         type: mariadb-replica:11.4
         relationships:
           primary: db:replicator
+        schemas:
+          - main
         configuration:
           endpoints:
             main:
