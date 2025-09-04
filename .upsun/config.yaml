@@ -36,7 +36,7 @@ applications:
             database-slave: 
               service: db
               endpoint: write
-            database-replica: db-replica:mariadb
+            database-replica: db-replica
             valkey:
                 service: cache
                 endpoint: valkey
