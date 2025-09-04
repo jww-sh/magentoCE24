@@ -36,6 +36,7 @@ applications:
             database-slave: 
               service: db
               endpoint: write
+            database-replica: db-replica:mariadb
             valkey:
                 service: cache
                 endpoint: valkey
@@ -167,19 +168,6 @@ services:
         type: mariadb-replica:11.4
         relationships:
           primary: db:replicator
-        configuration:
-          properties:
-            optimizer_switch: "rowid_filter=off"
-            optimizer_use_condition_selectivity: 1
-            query_cache_size: 0
-            query_cache_type: 0
-          schemas:
-            - main
-          endpoints:
-            read:
-              default_schema: main
-              privileges:
-                main: admin
     
     cache:
         # https://docs.upsun.com/manage-resources/adjust-resources.html#adjust-a-container-profile
