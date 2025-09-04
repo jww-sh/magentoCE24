@@ -32,11 +32,8 @@ applications:
         relationships:
             database: 
               service: db
-              endpoint: write
+              endpoint: main
             database-slave: 
-              service: db
-              endpoint: write
-            database-replica: 
               service: db-replica
             valkey:
                 service: cache
@@ -157,7 +154,7 @@ services:
           schemas:
             - main
           endpoints:
-            write:
+            main:
               default_schema: main
               privileges:
                 main: admin
@@ -176,7 +173,7 @@ services:
           schemas:
             - main
           endpoints:
-            write:
+            main:
               default_schema: main
               privileges:
                 main: admin        
