@@ -38,7 +38,6 @@ applications:
               endpoint: write
             database-replica: 
               service: db-replica
-              endpoint: write
             valkey:
                 service: cache
                 endpoint: valkey
