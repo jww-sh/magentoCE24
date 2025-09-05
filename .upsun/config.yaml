@@ -14,17 +14,14 @@ applications:
      upstream:
       socket_family: tcp
       protocol: http
-
-    commands:
-      # If you change the build output in the build hook above, update this line as well.
-      start: ./varnishmon --period 15s --db /tmp/varnishmon.db --varnishstat '/bin/curl varnishstats.internal:8081/stats' --port=${PORT}
-
-    locations:
-      /:
-        # Route all requests to the Go app, unconditionally.
-        allow: false
-        passthru: true
-
+      commands:
+        # If you change the build output in the build hook above, update this line as well.
+        start: ./varnishmon --period 15s --db /tmp/varnishmon.db --varnishstat '/bin/curl varnishstats.internal:8081/stats' --port=${PORT}
+      locations:
+        /:
+          # Route all requests to the Go app, unconditionally.
+          allow: false
+          passthru: true
     hooks:
       build: |
         set -e
@@ -32,8 +29,6 @@ applications:
         tar xfz varnishmon-0.8.6-1-01e02a7-bookworm-amd64.tgz
         mv varnishmon-*/varnishmon varnishmon
         rm -rf varnishmon-*        
-
-
     # Unique relationship _to_ Varnish from 'stats-app', where no relationship
     #   is defined _from_ Varnish to the same app, to avoid circular relationships.
     relationships:
