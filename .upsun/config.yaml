@@ -1,13 +1,15 @@
 applications:
-
   app:
     operations:
       purge_all_varnish_cache:
         role: viewer
         commands:
-          start: curl -IXPURGE $(echo $PLATFORM_ROUTES  | base64 --decode | jq -r 'keys[]' | grep -v https  )\*
+          start: curl -IXPURGE $(echo $PLATFORM_ROUTES | base64 --decode | jq -r 'keys[]' | grep -v https )\*
+    # https://docs.upsun.com/manage-resources/adjust-resources.html#adjust-a-container-profile
     container_profile: BALANCED
+    # The runtime the application uses.
     type: php:8.4
+    # Specify additional PHP extensions that should be loaded.
     runtime:
       extensions:
         - xsl
@@ -20,12 +22,18 @@ applications:
         NODE_VERSION: 20
         CONFIG__DEFAULT__SYSTEM__FULL_PAGE_CACHE__CACHING_APPLICATION: 2
       php:
-        memory_limit: 512M
+        memory_limit: "512M"
+    # Configuration of the build of this application.
     build:
       flavor: none
     dependencies:
       php:
-        composer/composer: ^2
+        composer/composer: '^2'
+    # The relationships of the application with services or other applications.
+    #
+    # The left-hand side is the name of the relationship as it will be exposed
+    # to the application in the PLATFORM_RELATIONSHIPS variable. The right-hand
+    # side is in the form `<service name>:<endpoint name>`.
     relationships:
       database:
         service: db
@@ -41,25 +49,27 @@ applications:
       valkey-session: session:valkey
       opensearch: indexer:opensearch
       rabbitmq: queue:rabbitmq
+    # The 'mounts' describe writable, persistent filesystem mounts in the application.
     mounts:
-      /var:
+      "/var":
         source: storage
-        source_path: var
-      /var/log:
+        source_path: "var"
+      "/var/log":
+        source: storage # can be instance but you may lose logs during autoscaling
+        source_path: "log"
+      "/app/etc":
         source: storage
-        source_path: log
-      /app/etc:
+        source_path: "etc"
+      "/pub/media":
         source: storage
-        source_path: etc
-      /pub/media:
+        source_path: "media"
+      "/pub/static":
         source: storage
-        source_path: media
-      /pub/static:
-        source: storage
-        source_path: static
-      /var/report:
+        source_path: "static"
+      "/var/report":
         source: tmp
-        source_path: report
+        source_path: "report"
+    # The hooks executed at various points in the lifecycle of the application.
     hooks:
       build: |
         set -e
@@ -84,6 +94,7 @@ applications:
         php ./vendor/bin/ece-tools run scenario/deploy.xml
       post_deploy: |
         php ./vendor/bin/ece-tools run scenario/post-deploy.xml
+    # The configuration of scheduled execution.
     workers:
       queue:
         commands:
@@ -92,53 +103,56 @@ applications:
             bash -c 'echo -e `date` - Running cron && bin/magento cron:run'
     crons:
       logrotate:
-        spec: 45 1 * * *
+        spec: "45 1 * * *"
         cmd: shtool rotate -n10 $PLATFORM_APP_DIR/var/log/*.log
       reportcleanup:
-        spec: 0 2 * * *
+        spec: "0 2 * * *"
         cmd: find $PLATFORM_APP_DIR/var/report/* -mtime +10 -delete
+    # The configuration of app when it is exposed to the web.
     web:
       locations:
-        /:
-          root: pub
-          passthru: /index.php
+        "/":
+          # The public directory of the app, relative to its root.
+          root: "pub"
+          # The front-controller script to send non-static requests to.
+          passthru: "/index.php"
           index:
             - index.php
+          #expires: -1
           scripts: true
           allow: false
           rules:
-            \.(css|js|map|hbs|gif|jpe?g|png|tiff|wbmp|ico|jng|bmp|svgz|midi?|mp?ga|mp2|mp3|m4a|ra|weba|3gpp?|mp4|mpe?g|mpe|ogv|mov|webm|flv|mng|asx|asf|wmv|avi|ogx|swf|jar|ttf|eot|woff|otf|html?)$:
-              allow: true
+            ? \.(css|js|map|hbs|gif|jpe?g|png|tiff|wbmp|ico|jng|bmp|svgz|midi?|mp?ga|mp2|mp3|m4a|ra|weba|3gpp?|mp4|mpe?g|mpe|ogv|mov|webm|flv|mng|asx|asf|wmv|avi|ogx|swf|jar|ttf|eot|woff|otf|html?)$
+            : allow: true
             ^/sitemap(.*)\.xml$:
-              passthru: /media/sitemap$1.xml
+              passthru: "/media/sitemap$1.xml"
             ^/.well-known/apple-developer-merchantid-domain-association.xml$:
-              passthru: /media/apple-developer-merchantid-domain-association.xml
+              passthru: "/media/apple-developer-merchantid-domain-association.xml"
             ^/.well-known/apple-developer-merchantid-domain-association.txt$:
-              passthru: /media/apple-developer-merchantid-domain-association.txt
-        /media:
-          root: pub/media
+              passthru: "/media/apple-developer-merchantid-domain-association.txt"
+        "/media":
+          root: "pub/media"
           allow: true
           scripts: false
           expires: 7d
-          passthru: /get.php
-        /static:
-          root: pub/static
+          passthru: "/get.php"
+        "/static":
+          root: "pub/static"
           allow: true
           scripts: false
           expires: 7d
-          passthru: /front-static.php
+          passthru: "/front-static.php"
           rules:
             ^/static/version\d+/(?<resource>.*)$:
-              passthru: /static/$resource
+              passthru: "/static/$resource"
     source:
       root: /
-
 services:
   db:
     type: mariadb:11.4
     configuration:
       properties:
-        optimizer_switch: rowid_filter=off
+        optimizer_switch: "rowid_filter=off"
         optimizer_use_condition_selectivity: 1
         query_cache_size: 0
         query_cache_type: 0
@@ -152,11 +166,12 @@ services:
         replicator:
           privileges:
             main: replication
+
   db-replica:
     type: mariadb-replica:11.4
     configuration:
       properties:
-        optimizer_switch: rowid_filter=off
+        optimizer_switch: "rowid_filter=off"
         optimizer_use_condition_selectivity: 1
         query_cache_size: 0
         query_cache_type: 0
@@ -169,16 +184,21 @@ services:
             main: admin
     relationships:
       primary: db:replicator
+
   cache:
+    # https://docs.upsun.com/manage-resources/adjust-resources.html#adjust-a-container-profile
     container_profile: HIGH_MEMORY
     type: valkey:8.0
     configuration:
       maxmemory_policy: allkeys-lru
+
   session:
+    # https://docs.upsun.com/manage-resources/adjust-resources.html#adjust-a-container-profile
     container_profile: HIGH_MEMORY
     type: valkey-persistent:8.0
     configuration:
       maxmemory_policy: allkeys-lru
+
   indexer:
     type: opensearch:3
     configuration:
@@ -187,32 +207,34 @@ services:
         - analysis-icu
   queue:
     type: rabbitmq:4.1
+
   varnish:
     type: varnish:7.6
     relationships:
-      application: app:http
+      application: 'app:http'
     configuration:
-      vcl:
+      vcl: !include
         type: string
         path: varnish.vcl
 
 routes:
-  "https://{default}/":
+  https://{default}/:
     type: upstream
     upstream: varnish:http
     cache:
       enabled: false
-  "https://{all}/":
+  https://{all}/:
     type: upstream
     upstream: varnish:http
     cache:
       enabled: false
-  "http://{default}/":
+  #http for purge
+  http://{default}/:
     type: upstream
     upstream: varnish:http
     cache:
       enabled: false
-  "http://{all}/":
+  http://{all}/:
     type: upstream
     upstream: varnish:http
     cache:
