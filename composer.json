@@ -73,6 +73,10 @@
             "url": "https://mirror.mage-os.org/"
         },
         {
+            "type": "composer",
+            "url": "https://repo.magento.com/"
+        },
+        {
             "type": "vcs",
             "url": "https://github.com/magento/ece-tools"
         },
