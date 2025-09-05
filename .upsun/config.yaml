@@ -61,7 +61,7 @@ applications:
         source: tmp
         source_path: report
     hooks:
-      build: >
+      build: |
         set -e
 #        #prep node as per https://experienceleague.adobe.com/en/docs/commerce-knowledge-base/kb/how-to/configure-npm-to-be-able-to-use-pwa-studio
 #        unset NPM_CONFIG_PREFIX
