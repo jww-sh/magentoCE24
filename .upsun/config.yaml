@@ -240,11 +240,6 @@ routes:
         upstream: varnish:http
         cache:
            enabled: false
-    https://{default}/varnishstats/:
-        type: upstream
-        upstream: varnishstatsapp:http
-        cache:
-           enabled: false
     #http for purge       
     http://{default}/:
         type: upstream
