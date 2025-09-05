@@ -213,7 +213,6 @@ services:
         type: varnish:7.6
         relationships:
             application: 'app:http'
-            endpoint: "http
         configuration:
             vcl: !include
                 type: string
