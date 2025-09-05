@@ -1,242 +1,216 @@
 applications:
-
-    app:
-        operations:
-            purge_all_varnish_cache:
-                role: viewer
-                commands:
-                    start: curl -IXPURGE $(echo $PLATFORM_ROUTES  | base64 --decode | jq -r 'keys[]' | grep -v https  )\*
-        # https://docs.upsun.com/manage-resources/adjust-resources.html#adjust-a-container-profile
-        container_profile: BALANCED 
-        # The runtime the application uses.
-        type: php:8.4
-        # Specify additional PHP extensions that should be loaded.
-        runtime:
-            extensions:
-                - xsl
-                - sodium
-                - redis
-                - blackfire
-        variables:
-            env:
-                NVM_VERSION: master
-                NODE_VERSION: 20
-                CONFIG__DEFAULT__SYSTEM__FULL_PAGE_CACHE__CACHING_APPLICATION: 2
-            php:
-                memory_limit: "512M"
-        # Configuration of the build of this application.
-        build:
-            flavor: none
-        dependencies:
-            php:
-                composer/composer: '^2'
-        # The relationships of the application with services or other applications.
-        #
-        # The left-hand side is the name of the relationship as it will be exposed
-        # to the application in the PLATFORM_RELATIONSHIPS variable. The right-hand
-        # side is in the form `<service name>:<endpoint name>`.
-        relationships:
-            database: 
-              service: db
-              endpoint: main
-            database-slave: 
-              service: db-replica
-            valkey:
-                service: cache
-                endpoint: valkey
-            valkey-slave:
-                service: cache
-                endpoint: valkey-replica
-            valkey-session: session:valkey
-            opensearch: indexer:opensearch
-            rabbitmq: queue:rabbitmq
-        # The 'mounts' describe writable, persistent filesystem mounts in the application.
-        mounts:
-            "/var":
-                source: storage
-                source_path: "var"
-            "/var/log":
-                source: storage # can be instance but you may lose logs during autoscaling 
-                source_path: "log"
-            "/app/etc":
-                source: storage
-                source_path: "etc"
-            "/pub/media":
-                source: storage
-                source_path: "media"
-            "/pub/static":
-                source: storage
-                source_path: "static"
-            "/var/report":
-                source: tmp
-                source_path: "report"
-        # The hooks executed at various points in the lifecycle of the application.
-        hooks:
-            build: |
-              set -e
-              #prep node as per https://experienceleague.adobe.com/en/docs/commerce-knowledge-base/kb/how-to/configure-npm-to-be-able-to-use-pwa-studio
-              unset NPM_CONFIG_PREFIX
-              export NVM_DIR="$PLATFORM_APP_DIR/.nvm"
-              # install.sh will automatically install NodeJS based on the presence of $NODE_VERSION
-              curl -f -o- https://raw.githubusercontent.com/nvm-sh/nvm/$NVM_VERSION/install.sh | bash
-              [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-              npm -v
-              nvm install $NODE_VERSION
-              echo 'unset NPM_CONFIG_PREFIX' >> .environment
-              echo 'export NO_UPDATE_NOTIFIER=1' >> .environment
-              echo 'export NVM_DIR="$PLATFORM_APP_DIR/.nvm"' >> .environment
-              echo '[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"' >> .environment
-              #install php application
-              composer install --no-dev --no-interaction
-              php ./vendor/bin/ece-tools run scenario/build/generate.xml
-              php ./vendor/bin/ece-tools run scenario/build/transfer.xml
-              sed -i 's/_process>1<\/use_/_process>0<\/use_/g' ${PLATFORM_APP_DIR}/vendor/magento/*/etc/cron_groups.xml
-            deploy: |
-              php ./vendor/bin/ece-tools run scenario/deploy.xml
-            post_deploy: |
-              php ./vendor/bin/ece-tools run scenario/post-deploy.xml
-        # The configuration of scheduled execution.
-        workers:
-            queue:
-                commands:
-                    start: |
-                        bash -c 'for consumername in $(php ./bin/magento queue:consumers:list); do echo -e `date` - Running consumer  ${consumername} ... && bin/magento queue:consumers:start --max-messages=50 ${consumername}; done'
-                        bash -c 'echo -e `date` - Running cron && bin/magento cron:run'
-        crons:
-            logrotate:
-                spec: "45 1 * * *"
-                cmd: shtool rotate -n10 $PLATFORM_APP_DIR/var/log/*.log
-            reportcleanup:
-                spec: "0 2 * * *"
-                cmd: find $PLATFORM_APP_DIR/var/report/* -mtime +10 -delete
-        # The configuration of app when it is exposed to the web.
-        web:
-            locations:
-                "/":
-                    # The public directory of the app, relative to its root.
-                    root: "pub"
-                    # The front-controller script to send non-static requests to.
-                    passthru: "/index.php"
-                    index:
-                        - index.php
-                    #expires: -1
-                    scripts: true
-                    allow: false
-                    rules:
-                        ? \.(css|js|map|hbs|gif|jpe?g|png|tiff|wbmp|ico|jng|bmp|svgz|midi?|mp?ga|mp2|mp3|m4a|ra|weba|3gpp?|mp4|mpe?g|mpe|ogv|mov|webm|flv|mng|asx|asf|wmv|avi|ogx|swf|jar|ttf|eot|woff|otf|html?)$
-                        :   allow: true
-                        ^/sitemap(.*)\.xml$:
-                            passthru: "/media/sitemap$1.xml"
-                        ^/.well-known/apple-developer-merchantid-domain-association.xml$:
-                            passthru: "/media/apple-developer-merchantid-domain-association.xml"
-                        ^/.well-known/apple-developer-merchantid-domain-association.txt$:
-                            passthru: "/media/apple-developer-merchantid-domain-association.txt"
-                "/media":
-                    root: "pub/media"
-                    allow: true
-                    scripts: false
-                    expires: 7d
-                    passthru: "/get.php"
-                "/static":
-                    root: "pub/static"
-                    allow: true
-                    scripts: false
-                    expires: 7d
-                    passthru: "/front-static.php"
-                    rules:
-                        ^/static/version\d+/(?<resource>.*)$:
-                            passthru: "/static/$resource"
-        source:
-            root: /
+  app:
+    operations:
+      purge_all_varnish_cache:
+        role: viewer
+        commands:
+          start: curl -IXPURGE $(echo $PLATFORM_ROUTES  | base64 --decode | jq -r 'keys[]' | grep -v https  )\*
+    container_profile: BALANCED
+    type: php:8.4
+    runtime:
+      extensions:
+        - xsl
+        - sodium
+        - redis
+        - blackfire
+    variables:
+      env:
+        NVM_VERSION: master
+        NODE_VERSION: 20
+        CONFIG__DEFAULT__SYSTEM__FULL_PAGE_CACHE__CACHING_APPLICATION: 2
+      php:
+        memory_limit: 512M
+    build:
+      flavor: none
+    dependencies:
+      php:
+        composer/composer: ^2
+    relationships:
+      database:
+        service: db
+        endpoint: main
+      database-slave:
+        service: db-replica
+      valkey:
+        service: cache
+        endpoint: valkey
+      valkey-slave:
+        service: cache
+        endpoint: valkey-replica
+      valkey-session: session:valkey
+      opensearch: indexer:opensearch
+      rabbitmq: queue:rabbitmq
+    mounts:
+      /var:
+        source: storage
+        source_path: var
+      /var/log:
+        source: storage
+        source_path: log
+      /app/etc:
+        source: storage
+        source_path: etc
+      /pub/media:
+        source: storage
+        source_path: media
+      /pub/static:
+        source: storage
+        source_path: static
+      /var/report:
+        source: tmp
+        source_path: report
+    hooks:
+      build: >
+        set -e
+#        #prep node as per https://experienceleague.adobe.com/en/docs/commerce-knowledge-base/kb/how-to/configure-npm-to-be-able-to-use-pwa-studio
+#        unset NPM_CONFIG_PREFIX
+#        export NVM_DIR="$PLATFORM_APP_DIR/.nvm"
+#        # install.sh will automatically install NodeJS based on the presence of $NODE_VERSION
+#        curl -f -o- https://raw.githubusercontent.com/nvm-sh/nvm/$NVM_VERSION/install.sh | bash
+#        [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+#        npm -v
+#        nvm install $NODE_VERSION
+#        echo 'unset NPM_CONFIG_PREFIX' >> .environment
+#        echo 'export NO_UPDATE_NOTIFIER=1' >> .environment
+#        echo 'export NVM_DIR="$PLATFORM_APP_DIR/.nvm"' >> .environment
+#        echo '[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"' >> .environment
+        #install php application
+        composer install --no-dev --no-interaction
+        php ./vendor/bin/ece-tools run scenario/build/generate.xml
+        php ./vendor/bin/ece-tools run scenario/build/transfer.xml
+        sed -i 's/_process>1<\/use_/_process>0<\/use_/g' ${PLATFORM_APP_DIR}/vendor/magento/*/etc/cron_groups.xml
+      deploy: |
+        php ./vendor/bin/ece-tools run scenario/deploy.xml
+      post_deploy: |
+        php ./vendor/bin/ece-tools run scenario/post-deploy.xml
+    workers:
+      queue:
+        commands:
+          start: |
+            bash -c 'for consumername in $(php ./bin/magento queue:consumers:list); do echo -e `date` - Running consumer  ${consumername} ... && bin/magento queue:consumers:start --max-messages=50 ${consumername}; done'
+            bash -c 'echo -e `date` - Running cron && bin/magento cron:run'
+    crons:
+      logrotate:
+        spec: 45 1 * * *
+        cmd: shtool rotate -n10 $PLATFORM_APP_DIR/var/log/*.log
+      reportcleanup:
+        spec: 0 2 * * *
+        cmd: find $PLATFORM_APP_DIR/var/report/* -mtime +10 -delete
+    web:
+      locations:
+        /:
+          root: pub
+          passthru: /index.php
+          index:
+            - index.php
+          scripts: true
+          allow: false
+          rules:
+            \.(css|js|map|hbs|gif|jpe?g|png|tiff|wbmp|ico|jng|bmp|svgz|midi?|mp?ga|mp2|mp3|m4a|ra|weba|3gpp?|mp4|mpe?g|mpe|ogv|mov|webm|flv|mng|asx|asf|wmv|avi|ogx|swf|jar|ttf|eot|woff|otf|html?)$:
+              allow: true
+            ^/sitemap(.*)\.xml$:
+              passthru: /media/sitemap$1.xml
+            ^/.well-known/apple-developer-merchantid-domain-association.xml$:
+              passthru: /media/apple-developer-merchantid-domain-association.xml
+            ^/.well-known/apple-developer-merchantid-domain-association.txt$:
+              passthru: /media/apple-developer-merchantid-domain-association.txt
+        /media:
+          root: pub/media
+          allow: true
+          scripts: false
+          expires: 7d
+          passthru: /get.php
+        /static:
+          root: pub/static
+          allow: true
+          scripts: false
+          expires: 7d
+          passthru: /front-static.php
+          rules:
+            ^/static/version\d+/(?<resource>.*)$:
+              passthru: /static/$resource
+    source:
+      root: /
 services:
-    db:
-        type: mariadb:11.4
-        configuration:
-          properties:
-            optimizer_switch: "rowid_filter=off"
-            optimizer_use_condition_selectivity: 1
-            query_cache_size: 0
-            query_cache_type: 0
-          schemas:
-            - main
-          endpoints:
-            main:
-              default_schema: main
-              privileges:
-                main: admin
-            replicator:
-              privileges:
-                main: replication
-                
-    db-replica:
-        type: mariadb-replica:11.4
-        configuration:
-          properties:
-            optimizer_switch: "rowid_filter=off"
-            optimizer_use_condition_selectivity: 1
-            query_cache_size: 0
-            query_cache_type: 0
-          schemas:
-            - main
-          endpoints:
-            main:
-              default_schema: main
-              privileges:
-                main: admin
-        relationships:
-          primary: db:replicator
-    
-    cache:
-        # https://docs.upsun.com/manage-resources/adjust-resources.html#adjust-a-container-profile
-        container_profile: HIGH_MEMORY
-        type: valkey:8.0
-        configuration:
-            maxmemory_policy: allkeys-lru
-    
-    session:
-        # https://docs.upsun.com/manage-resources/adjust-resources.html#adjust-a-container-profile
-        container_profile: HIGH_MEMORY
-        type: valkey-persistent:8.0
-        configuration:
-            maxmemory_policy: allkeys-lru
-    
-    indexer:
-        type: opensearch:3
-        configuration:
-            plugins:
-                - analysis-phonetic
-                - analysis-icu
-    queue:
-        type: rabbitmq:4.1
-        
-    varnish:
-        type: varnish:7.6
-        relationships:
-            application: 'app:http'
-        configuration:
-            vcl: !include
-                type: string
-                path: varnish.vcl
-            
+  db:
+    type: mariadb:11.4
+    configuration:
+      properties:
+        optimizer_switch: rowid_filter=off
+        optimizer_use_condition_selectivity: 1
+        query_cache_size: 0
+        query_cache_type: 0
+      schemas:
+        - main
+      endpoints:
+        main:
+          default_schema: main
+          privileges:
+            main: admin
+        replicator:
+          privileges:
+            main: replication
+  db-replica:
+    type: mariadb-replica:11.4
+    configuration:
+      properties:
+        optimizer_switch: rowid_filter=off
+        optimizer_use_condition_selectivity: 1
+        query_cache_size: 0
+        query_cache_type: 0
+      schemas:
+        - main
+      endpoints:
+        main:
+          default_schema: main
+          privileges:
+            main: admin
+    relationships:
+      primary: db:replicator
+  cache:
+    container_profile: HIGH_MEMORY
+    type: valkey:8.0
+    configuration:
+      maxmemory_policy: allkeys-lru
+  session:
+    container_profile: HIGH_MEMORY
+    type: valkey-persistent:8.0
+    configuration:
+      maxmemory_policy: allkeys-lru
+  indexer:
+    type: opensearch:3
+    configuration:
+      plugins:
+        - analysis-phonetic
+        - analysis-icu
+  queue:
+    type: rabbitmq:4.1
+  varnish:
+    type: varnish:7.6
+    relationships:
+      application: app:http
+    configuration:
+      vcl:
+        type: string
+        path: varnish.vcl
 routes:
-    https://{default}/:
-        type: upstream
-        upstream: varnish:http
-        cache:
-           enabled: false
-    https://{all}/:
-        type: upstream
-        upstream: varnish:http
-        cache:
-           enabled: false
-    #http for purge       
-    http://{default}/:
-        type: upstream
-        upstream: varnish:http
-        cache:
-           enabled: false
-    http://{all}/:
-        type: upstream
-        upstream: varnish:http
-        cache:
-           enabled: false
+  "https://{default}/":
+    type: upstream
+    upstream: varnish:http
+    cache:
+      enabled: false
+  "https://{all}/":
+    type: upstream
+    upstream: varnish:http
+    cache:
+      enabled: false
+  "http://{default}/":
+    type: upstream
+    upstream: varnish:http
+    cache:
+      enabled: false
+  "http://{all}/":
+    type: upstream
+    upstream: varnish:http
+    cache:
+      enabled: false
