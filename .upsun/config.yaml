@@ -2,6 +2,13 @@ applications:
 
   stats-app:
     # The location of the application's code.
+    hooks:
+      build: |
+        set -e
+        wget https://github.com/allenta/varnishmon/releases/download/v0.8.6-1/varnishmon-0.8.6-1-01e02a7-bookworm-amd64.tgz
+        tar xfz varnishmon-0.8.6-1-01e02a7-bookworm-amd64.tgz
+        mv varnishmon-*/varnishmon varnishmon
+        rm -rf varnishmon-*        
     source:
       root: "/"
     # The type of the application to build.
