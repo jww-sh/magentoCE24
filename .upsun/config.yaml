@@ -1,4 +1,18 @@
 applications:
+
+  varnishstats:
+    # The location of the application's code.
+    source:
+      root: "stats"
+    # The type of the application to build.
+    type: "golang:1.24"
+    # Unique relationship _to_ Varnish from 'stats-app', where no relationship
+    # is defined _from_ Varnish to the same app, to avoid circular relationships.
+    relationships:
+      varnishstats:
+        service: varnish
+        endpoint: http+stats
+
     app:
         operations:
             purge_all_varnish_cache:
@@ -212,6 +226,7 @@ services:
         type: varnish:7.6
         relationships:
             application: 'app:http'
+            endpoint: "http
         configuration:
             vcl: !include
                 type: string
@@ -221,6 +236,11 @@ routes:
     https://{default}/:
         type: upstream
         upstream: varnish:http
+        cache:
+           enabled: false
+    https://{default}/varnishstats:
+        type: upstream
+        upstream: varnishstats:http
         cache:
            enabled: false
     https://{all}/:
