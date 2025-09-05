@@ -162,7 +162,11 @@ services:
             replicator:
               privileges:
                 main: replication
-
+                
+    db-replica:
+        type: mariadb-replica:11.4
+        relationships:
+          primary: db:replicator
     
     cache:
         # https://docs.upsun.com/manage-resources/adjust-resources.html#adjust-a-container-profile
