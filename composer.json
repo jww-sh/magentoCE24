@@ -18,7 +18,7 @@
     },
     "require": {
         "magento/ece-tools": "^2002",
-        "magento/product-community-edition": "^2.4",
+        "magento/magento-cloud-metapackage": "^2.4",
         "magento/composer-root-update-plugin": "*",
         "markshust/magento2-module-disabletwofactorauth": "*",
         "magento/module-bundle-sample-data": "*",
