@@ -238,7 +238,7 @@ routes:
         upstream: varnish:http
         cache:
            enabled: false
-    https://{default}/varnishstats:
+    https://{default}/varnishstats/:
         type: upstream
         upstream: varnishstats:http
         cache:
