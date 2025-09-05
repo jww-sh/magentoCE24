@@ -1,4 +1,18 @@
 applications:
+
+  stats-app:
+    # The location of the application's code.
+    source:
+      root: "/"
+    # The type of the application to build.
+    type: "python:3.13"
+    # Unique relationship _to_ Varnish from 'stats-app', where no relationship
+    #   is defined _from_ Varnish to the same app, to avoid circular relationships.
+    relationships:
+      varnishstats:
+        service: varnish
+        endpoint: "http+stats"
+
   app:
     operations:
       purge_all_varnish_cache:
@@ -216,6 +230,9 @@ services:
       vcl: !include
         type: string
         path: varnish.vcl
+
+
+
 
 routes:
   https://{default}/:
