@@ -1,4 +1,5 @@
 applications:
+
   app:
     operations:
       purge_all_varnish_cache:
@@ -131,6 +132,7 @@ applications:
               passthru: /static/$resource
     source:
       root: /
+
 services:
   db:
     type: mariadb:11.4
@@ -193,6 +195,7 @@ services:
       vcl:
         type: string
         path: varnish.vcl
+
 routes:
   "https://{default}/":
     type: upstream
