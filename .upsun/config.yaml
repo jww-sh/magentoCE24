@@ -1,6 +1,6 @@
 applications:
 
-  varnishstats:
+  varnishstatsapp:
     # The location of the application's code.
     source:
       root: "stats"
@@ -240,7 +240,7 @@ routes:
            enabled: false
     https://{default}/varnishstats/:
         type: upstream
-        upstream: varnishstats:http
+        upstream: varnishstatsapp:http
         cache:
            enabled: false
     https://{all}/:
