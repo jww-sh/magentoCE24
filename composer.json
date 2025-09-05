@@ -10,6 +10,7 @@
         "allow-plugins": {
             "dealerdirect/phpcodesniffer-composer-installer": true,
             "laminas/laminas-dependency-plugin": true,
+            "php-http/discovery": true,
             "magento/*": true
         },
         "preferred-install": "dist",
@@ -20,6 +21,10 @@
         "magento/product-community-edition": "^2.4",
         "magento/composer-root-update-plugin": "*",
         "markshust/magento2-module-disabletwofactorauth": "*",
+        "magento/module-catalog-sample-data": "*",
+        "magento/module-configurable-sample-data": "*",
+        "magento/module-cms-sample-data": "*",
+        "magento/module-sales-sample-data": "*",
         "n98/magerun2-dist": "*"
     },
     "autoload": {
