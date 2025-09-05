@@ -149,7 +149,7 @@ return [
         'Magento_Catalog' => 1,
         'Magento_CatalogInventory' => 1,
         'Magento_CatalogPageBuilderAnalytics' => 1,
-        'Magento_CatalogRule' => 1,
+        'Magento_CatalogRule' => 0,
         'Magento_Msrp' => 1,
         'Magento_CatalogRuleGraphQl' => 1,
         'Magento_CatalogSearch' => 1,
