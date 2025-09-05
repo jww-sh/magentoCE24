@@ -34,8 +34,7 @@ applications:
               service: db
               endpoint: main
             database-slave: 
-              service: db
-              endpoint: main
+              service: db-replica
             valkey:
                 service: cache
                 endpoint: valkey
