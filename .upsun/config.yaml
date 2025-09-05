@@ -16,7 +16,7 @@ applications:
         protocol: http
       commands:
         # If you change the build output in the build hook above, update this line as well.
-        start: ./varnishmon --period 15s --db db/varnishmon.db --varnishstat '/bin/curl varnishstats.internal:8081/stats' --port=${PORT}
+        start: ./varnishmon --period 15s --db db/varnishmon.db --varnishstat "/bin/curl -s varnishstats.internal:8081/stats" --port=${PORT}
       locations:
         /:
           # Route all requests to the Go app, unconditionally.
