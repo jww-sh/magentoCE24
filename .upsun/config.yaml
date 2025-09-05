@@ -11,9 +11,9 @@ applications:
         source: instance
         source_path: "db"
     web:
-     upstream:
-      socket_family: tcp
-      protocol: http
+      upstream:
+        socket_family: tcp
+        protocol: http
       commands:
         # If you change the build output in the build hook above, update this line as well.
         start: ./varnishmon --period 15s --db /tmp/varnishmon.db --varnishstat '/bin/curl varnishstats.internal:8081/stats' --port=${PORT}
