@@ -263,7 +263,7 @@ routes:
     upstream: varnish:http
     cache:
       enabled: false
-  https://{default}/stats-app:
+  https://stats.{default}/:
     type: upstream
     upstream: stats-app:http
     cache:
