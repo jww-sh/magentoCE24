@@ -177,9 +177,9 @@ sub process_graphql_headers {
 }
 
 sub vcl_backend_response {
-    # Serve stale content for one days after object expiration
+    # Serve stale content for 5 minutes after object expiration
     # Perform asynchronous revalidation while stale content is served
-    set beresp.grace = 1d;
+    set beresp.grace = 5m;
 
     if (beresp.http.X-Magento-Tags) {
         # set comma separated xkey with "all" tag
