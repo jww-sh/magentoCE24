@@ -21,6 +21,7 @@
         "magento/product-community-edition": "^2.4",
         "magento/composer-root-update-plugin": "*",
         "markshust/magento2-module-disabletwofactorauth": "*",
+        "magento/module-bundle-sample-data": "*",
         "magento/module-catalog-sample-data": "*",
         "magento/module-configurable-sample-data": "*",
         "magento/module-cms-sample-data": "*",
