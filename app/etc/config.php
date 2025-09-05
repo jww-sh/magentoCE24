@@ -466,6 +466,7 @@ return [
         'PayPal_BraintreeCustomerBalance' => 1,
         'PayPal_BraintreeGiftCardAccount' => 1,
         'PayPal_BraintreeGiftWrapping' => 1,
+        'Magento_SalesSequence' => 0,
         'PayPal_BraintreeGraphQl' => 1
     ],
     'admin_user' => [
