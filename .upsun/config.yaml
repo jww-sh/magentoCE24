@@ -26,7 +26,7 @@ applications:
       build: |
         set -e
         wget https://github.com/allenta/varnishmon/releases/download/v0.8.6-1/varnishmon-0.8.6-1-01e02a7-bookworm-amd64.tgz
-        tar xfz varnishmon-0.8.6-1-01e02a7-bookworm-amd64.tgz
+        tar xfz varnishmon-*-amd64.tgz
         mv varnishmon-*/varnishmon varnishmon
         rm -rf varnishmon-*        
     # Unique relationship _to_ Varnish from 'stats-app', where no relationship
@@ -42,7 +42,7 @@ applications:
         role: viewer
         commands:
           start: |
-            curl -XPURGE $(echo $PLATFORM_ROUTES  | base64 --decode | jq -r 'keys[]' | grep  https | grep -v stats ) -H "X-Magento-Tags-Pattern: .*"  -v
+            curl -XPURGE $(echo $PLATFORM_ROUTES  | base64 --decode | jq -r 'keys[]' | grep  https | grep -v stats ) -H "X-Magento-Tags-Pattern: .*"
     # https://docs.upsun.com/manage-resources/adjust-resources.html#adjust-a-container-profile
     container_profile: BALANCED
     # The runtime the application uses.
