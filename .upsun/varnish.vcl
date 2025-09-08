@@ -2,6 +2,7 @@
 
 import cookie;
 import xkey;
+import vsthrottle;
 
 # Add hostnames, IP addresses and subnets that are allowed to purge content
 #https://docs.platform.sh/development/regions.html#:~:text=52.208.123.9,52.30.200.164
@@ -71,6 +72,18 @@ sub vcl_recv {
     # Varnish processing continues, allowing other VCL logic to be evaluated.
     # If a request was not whitelisted and did not trigger a block, it also continues.
 
+    if ( req.url !~ "^/(media|static)/" && vsthrottle.is_denied(req.http.X-Client-IP, 10, 15s, 123s)) {
+            # Client has exceeded 10 reqs per 15s.
+            # When this happens, block altogether for the next 123s.
+            return (synth(429, "Too Many Requests"));
+    }
+
+    # Only allow a few POST/PUTs per client.
+    if (req.method == "POST" || req.method == "PUT") {
+            if (vsthrottle.is_denied("rw" + req.http.X-Client-IP, 3, 10s, 123s)) {
+                    return (synth(429, "Too Many Requests"));
+            }
+    }
 
     # Remove empty query string parameters
     # e.g.: www.example.com/index.html?    
