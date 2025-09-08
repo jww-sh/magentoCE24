@@ -30,7 +30,7 @@ sub vcl_recv {
     # If it's not whitelisted, then we proceed with the blocking checks.
     # If it IS whitelisted, this entire block is skipped, and processing continues.
 
-    if (!(std.ip(req.http.X-Client-IP, "0.0.0.0" ~ allowed_ips || req.http.User-Agent ~ "(UptimeRobot|NodePing)")) {
+    if (!(std.ip(req.http.X-Client-IP, "0.0.0.0") ~ allowed_ips || req.http.User-Agent ~ "(UptimeRobot|NodePing)")) {
 
         # --- Block by Abuse Score ---
         # Check if the "client-abuse-score" header exists in the request.
