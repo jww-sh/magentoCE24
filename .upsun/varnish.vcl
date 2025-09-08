@@ -113,18 +113,18 @@ sub vcl_recv {
         # If the X-Magento-Tags-Pattern header is not set, just use regular URL-based purge
         if (!req.http.X-Magento-Tags-Pattern) {
             return (purge);
-            ban req.url ~ "^/"
+            ban (req.url ~ "^/");
         }
 
         # Full Page Cache flush
         if (req.http.X-Magento-Tags-Pattern == ".*") {
             if (0) { # CONFIGURABLE: soft purge
                 set req.http.n-gone = xkey.softpurge("all");
-                ban req.url ~ "^/"
+                ban (req.url ~ "^/");
             } else {
                 set req.http.n-gone = xkey.purge("all");
                 return (purge);
-                ban req.url ~ "^/"
+                ban (req.url ~ "^/");
             }
             return (synth(200, "Invalidated " + req.http.n-gone + " objects full flush"));
         } else if (req.http.X-Magento-Tags-Pattern) {
