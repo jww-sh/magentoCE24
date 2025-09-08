@@ -88,8 +88,6 @@ sub vcl_recv {
         set req.url = std.querysort(req.url);
     }
 
-    set req.grace = 10s;
-
     # Purge logic to remove objects from the cache
     # Tailored to Magento's cache invalidation mechanism and Platform.SH X-Client-IP
     # The X-Magento-Tags-Pattern value is matched to the tags in the X-Magento-Tags header
@@ -110,6 +108,7 @@ sub vcl_recv {
                 set req.http.n-gone = xkey.softpurge("all");
             } else {
                 set req.http.n-gone = xkey.purge("all");
+                return (purge);
             }
             return (synth(200, "Invalidated " + req.http.n-gone + " objects full flush"));
         } else if (req.http.X-Magento-Tags-Pattern) {
@@ -227,9 +226,9 @@ sub process_graphql_headers {
 }
 
 sub vcl_backend_response {
-    # Serve stale content for 5 minutes after object expiration
+    # Serve stale content for 60 minutes after object expiration
     # Perform asynchronous revalidation while stale content is served
-    set beresp.grace = 5m;
+    set beresp.grace = 60m;
 
     if (beresp.http.X-Magento-Tags) {
         # set comma separated xkey with "all" tag
@@ -270,7 +269,6 @@ sub vcl_deliver {
         set resp.http.X-Magento-Cache-Debug = "UNCACHEABLE";
     } else if (obj.hits) {
         set resp.http.X-Magento-Cache-Debug = "HIT";
-        set resp.http.Grace = req.http.grace;
     } else {
         set resp.http.X-Magento-Cache-Debug = "MISS";
     }
