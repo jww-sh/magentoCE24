@@ -26,7 +26,8 @@
         "magento/module-configurable-sample-data": "*",
         "magento/module-cms-sample-data": "*",
         "magento/module-sales-sample-data": "*",
-        "genaker/react-luma",
+        "genaker/react-luma": "*",
+        "genaker/module-opcache": "*",
         "n98/magerun2-dist": "*"
     },
     "autoload": {
