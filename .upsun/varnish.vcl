@@ -29,7 +29,7 @@ sub vcl_recv {
             # and send a synthetic 403 Forbidden response to the client.
             return (synth(403, "Forbidden: High client abuse score."));
         }
-
+    }
 
     #https://docs.upsun.com/add-services/varnish.html#2-create-a-vcl-template:~:text=sub%20vcl_recv%20%7B-,set%20req.backend_hint%20%3D%20application.backend()%3B,-%7D 
     set req.backend_hint = application.backend();
