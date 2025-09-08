@@ -88,7 +88,8 @@ sub vcl_recv {
     if (std.healthy(req.backend_hint)) {
         set req.grace = 5s;
     }
-    
+    set req.grace = 10s
+
     # Purge logic to remove objects from the cache
     # Tailored to Magento's cache invalidation mechanism and Platform.SH X-Client-IP
     # The X-Magento-Tags-Pattern value is matched to the tags in the X-Magento-Tags header
