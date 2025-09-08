@@ -171,13 +171,13 @@ applications:
           root: "pub/media"
           allow: true
           scripts: false
-          expires: 7d
+          expires: 1d
           passthru: "/get.php"
         "/static":
           root: "pub/static"
           allow: true
           scripts: false
-          expires: 7d
+          expires: 1d
           passthru: "/front-static.php"
           rules:
             ^/static/version\d+/(?<resource>.*)$:
