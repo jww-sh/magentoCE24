@@ -41,7 +41,8 @@ applications:
       purge_all_varnish_cache:
         role: viewer
         commands:
-          start: curl -IXPURGE $(echo $PLATFORM_ROUTES | base64 --decode | jq -r 'keys[]' | grep -v https | grep -v  stats)*
+          start: |
+            curl -XPURGE $(echo $PLATFORM_ROUTES  | base64 --decode | jq -r 'keys[]' | grep  https | grep -v stats ) -H "X-Magento-Tags-Pattern: .*"  -v
     # https://docs.upsun.com/manage-resources/adjust-resources.html#adjust-a-container-profile
     container_profile: BALANCED
     # The runtime the application uses.
