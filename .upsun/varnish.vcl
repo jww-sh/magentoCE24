@@ -29,9 +29,8 @@ sub vcl_recv {
     # A regex is used for IPs and User-Agents for easier management of multiple entries.
     # If it's not whitelisted, then we proceed with the blocking checks.
     # If it IS whitelisted, this entire block is skipped, and processing continues.
-    if (!(req.http.X-Client-IP ~ ("^(32\.32\.32\.32"
-        + "|2\.2\.2\.2"
-        + "|1\.1\.1\.1)$") || req.http.User-Agent ~ "(UptimeRobot|NodePing)")) {
+
+    if (!(std.ip(req.http.X-Client-IP, "0.0.0.0" ~ allowed_ips || req.http.User-Agent ~ "(UptimeRobot|NodePing)")) {
 
         # --- Block by Abuse Score ---
         # Check if the "client-abuse-score" header exists in the request.
