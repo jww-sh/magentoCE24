@@ -113,19 +113,14 @@ sub vcl_recv {
         # If the X-Magento-Tags-Pattern header is not set, just use regular URL-based purge
         if (!req.http.X-Magento-Tags-Pattern) {
             return (purge);
-            if (req.url == "*") { 
-                ban("obj.status != 0");
-            }
         }
 
         # Full Page Cache flush
         if (req.http.X-Magento-Tags-Pattern == ".*") {
             if (0) { # CONFIGURABLE: soft purge
                 set req.http.n-gone = xkey.softpurge("all");
-                ban("obj.status != 0");
             } else {
                 set req.http.n-gone = xkey.purge("all");
-                ban("obj.status != 0");
                 return (purge);
             }
             return (synth(200, "Invalidated " + req.http.n-gone + " objects full flush"));
@@ -252,6 +247,8 @@ sub vcl_backend_response {
         # set comma separated xkey with "all" tag
         set beresp.http.XKey = beresp.http.X-Magento-Tags + ",all";
         unset beresp.http.X-Magento-Tags;
+    } else {
+        set beresp.http.XKey = "all";
     }
 
     # All text-based content can be parsed as ESI
