@@ -6,12 +6,18 @@ import xkey;
 # Add hostnames, IP addresses and subnets that are allowed to purge content
 #https://docs.platform.sh/development/regions.html#:~:text=52.208.123.9,52.30.200.164
 acl purge {
-    "localhost";
+    "52.214.63.84";
+    "52.208.123.9";
+    "52.30.200.164";
+}
+
+acl allowed_ips {
     "127.0.0.1";
     "52.214.63.84";
     "52.208.123.9";
     "52.30.200.164";
 }
+
 
 sub vcl_recv {
 
@@ -83,12 +89,7 @@ sub vcl_recv {
         set req.url = std.querysort(req.url);
     }
 
-    # Reduce grace to the configured setting if the backend is healthy
-    # In case of an unhealthy backend, the original grace is used
-    if (std.healthy(req.backend_hint)) {
-        set req.grace = 5s;
-    }
-    set req.grace = 10s
+    set req.grace = 10s;
 
     # Purge logic to remove objects from the cache
     # Tailored to Magento's cache invalidation mechanism and Platform.SH X-Client-IP
