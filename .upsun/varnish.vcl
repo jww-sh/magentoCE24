@@ -15,24 +15,57 @@ acl purge {
 
 sub vcl_recv {
 
+    #https://docs.upsun.com/add-services/varnish.html#2-create-a-vcl-template:~:text=sub%20vcl_recv%20%7B-,set%20req.backend_hint%20%3D%20application.backend()%3B,-%7D 
+    set req.backend_hint = application.backend();
 
-    # Check if the "client-abuse-score" header exists in the request.
-    if (req.http.client-abuse-score) {
+    # --- Whitelist / Exception Section ---
+    # We check if the request is NOT from a whitelisted source.
+    # A regex is used for IPs and User-Agents for easier management of multiple entries.
+    # If it's not whitelisted, then we proceed with the blocking checks.
+    # If it IS whitelisted, this entire block is skipped, and processing continues.
+    if (!(req.http.X-Client-IP ~ ("^(32\.32\.32\.32"
+        + "|2\.2\.2\.2"
+        + "|1\.1\.1\.1)$") || req.http.User-Agent ~ "(UptimeRobot|NodePing)")) {
 
-        # If the header exists, convert its value to an integer.
-        # The second argument to std.integer() is a fallback value (0)
-        # in case the header contains non-numeric data.
-        # Then, check if the score is greater than 25.
-        if (std.integer(req.http.client-abuse-score, 0) > 25) {
+        # --- Block by Abuse Score ---
+        # Check if the "client-abuse-score" header exists in the request.
+        if (req.http.client-abuse-score) {
+            # If the header exists, convert its value to an integer.
+            # Then, check if the score is greater than 25.
+            if (std.integer(req.http.client-abuse-score, 0) > 25) {
+                # If the score is high, send a synthetic 403 Forbidden response.
+                return (synth(403, "High client abuse score detected."));
+            }
+        }
 
-            # If the score is greater than 25, stop processing the request
-            # and send a synthetic 403 Forbidden response to the client.
-            return (synth(403, "Forbidden: High client abuse score."));
+        # --- Block by Country ---
+        # Check if the "client-country" header exists.
+        if (req.http.client-country) {
+            # Match against a list of blocked country codes.
+            # The (?i) flag makes the regex case-insensitive.
+            # Example: Russia (RU), China (CN), and North Korea (KP).
+            if (req.http.client-country ~ "(?i)^(RU|CN|KP)$") {
+                # If the country is in the blocklist, return a 403 Forbidden error.
+                return (synth(403, "Access from your country is restricted."));
+            }
+        }
+
+        # --- Block by ASN (Autonomous System Number) ---
+        # Check if the "client-asn" header exists.
+        if (req.http.client-asn) {
+            # Match against a list of blocked ASNs.
+            # Example: Alibaba AS45102 and Huawei AS132203 ASNs "45102" and "132203".
+            if (req.http.client-asn ~ "^(45102|132203)$") {
+                 # If the ASN is in the blocklist, return a 403 Forbidden error.
+                return (synth(403, "Access from your network is restricted."));
+            }
         }
     }
 
-    #https://docs.upsun.com/add-services/varnish.html#2-create-a-vcl-template:~:text=sub%20vcl_recv%20%7B-,set%20req.backend_hint%20%3D%20application.backend()%3B,-%7D 
-    set req.backend_hint = application.backend();
+    # If a request was whitelisted, the 'if' block above was skipped.
+    # Varnish processing continues, allowing other VCL logic to be evaluated.
+    # If a request was not whitelisted and did not trigger a block, it also continues.
+
 
     # Remove empty query string parameters
     # e.g.: www.example.com/index.html?    
