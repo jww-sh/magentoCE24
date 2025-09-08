@@ -15,6 +15,22 @@ acl purge {
 
 sub vcl_recv {
 
+
+    # Check if the "client-abuse-score" header exists in the request.
+    if (req.http.client-abuse-score) {
+
+        # If the header exists, convert its value to an integer.
+        # The second argument to std.integer() is a fallback value (0)
+        # in case the header contains non-numeric data.
+        # Then, check if the score is greater than 25.
+        if (std.integer(req.http.client-abuse-score, 0) > 25) {
+
+            # If the score is greater than 25, stop processing the request
+            # and send a synthetic 403 Forbidden response to the client.
+            return (synth(403, "Forbidden: High client abuse score."));
+        }
+
+
     #https://docs.upsun.com/add-services/varnish.html#2-create-a-vcl-template:~:text=sub%20vcl_recv%20%7B-,set%20req.backend_hint%20%3D%20application.backend()%3B,-%7D 
     set req.backend_hint = application.backend();
 
