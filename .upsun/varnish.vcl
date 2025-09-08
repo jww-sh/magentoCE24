@@ -24,6 +24,7 @@ sub vcl_recv {
 
     #https://docs.upsun.com/add-services/varnish.html#2-create-a-vcl-template:~:text=sub%20vcl_recv%20%7B-,set%20req.backend_hint%20%3D%20application.backend()%3B,-%7D 
     set req.backend_hint = application.backend();
+    set req.http.grace = "none";
 
     # --- Whitelist / Exception Section ---
     # We check if the request is NOT from a whitelisted source.
@@ -84,6 +85,7 @@ sub vcl_recv {
                     return (synth(429, "Too Many Requests"));
             }
     }
+
 
     # Remove empty query string parameters
     # e.g.: www.example.com/index.html?    
