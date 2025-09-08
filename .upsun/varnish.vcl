@@ -122,6 +122,7 @@ sub vcl_recv {
             } else {
                 set req.http.n-gone = xkey.purge("all");
                 return (purge);
+                ban("req.url ~ .*");
             }
             return (synth(200, "Invalidated " + req.http.n-gone + " objects full flush"));
         } else if (req.http.X-Magento-Tags-Pattern) {
