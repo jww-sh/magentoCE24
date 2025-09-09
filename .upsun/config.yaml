@@ -128,6 +128,7 @@ applications:
         mv pwa-studio-* pwa
         cd pwa
         npm install --global yarn
+        npm install --global rimraf
         yarn run build
         cd ..
         #install php application
