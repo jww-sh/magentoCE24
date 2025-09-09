@@ -29,10 +29,11 @@ sub vcl_recv {
     # --- Whitelist / Exception Section ---
     # We check if the request is NOT from a whitelisted source.
     # A regex is used for IPs and User-Agents for easier management of multiple entries.
+    # If you need google ASN 15169 to crawl allow it here too, in case their IPs were blocked by abuseipdb.
     # If it's not whitelisted, then we proceed with the blocking checks.
     # If it IS whitelisted, this entire block is skipped, and processing continues.
 
-    if (!(std.ip(req.http.X-Client-IP, "0.0.0.0") ~ allowed_ips || req.http.User-Agent ~ "(UptimeRobot|NodePing)")) {
+    if (!(std.ip(req.http.X-Client-IP, "0.0.0.0") ~ allowed_ips || req.http.User-Agent ~ "(UptimeRobot|NodePing)" || req.http.client-asn ~ "^(15169)$" )) {
 
         # --- Block by Abuse Score ---
         # Check if the "client-abuse-score" header exists in the request.
