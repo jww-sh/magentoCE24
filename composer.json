@@ -31,6 +31,7 @@
         "swissup/breeze-evolution": "*",
         "swissup/breeze-blank": "*",
         "swissup/module-breeze": "*",
+        "hypernode/magento2-remote-storage-tweaks": "*",
         "n98/magerun2-dist": "*"
     },
     "autoload": {
