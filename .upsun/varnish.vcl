@@ -80,7 +80,6 @@ sub vcl_recv {
                     # When this happens, block altogether for the next 123s.
                     return (synth(429, "Too Many Requests"));
                 }
-            }
     }
 
     # Only allow a few POST/PUTs per client.
