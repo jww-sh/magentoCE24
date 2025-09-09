@@ -28,7 +28,8 @@
         "magento/module-sales-sample-data": "*",
         "genaker/module-opcache": "*",
         "element119/module-admin-redis-report": "*",
-        "swissup/module-breeze": "*",
+        "swissup/module-breeze-blank": "*",
+        "swissup/module-breeze-evolution": "*",
         "n98/magerun2-dist": "*"
     },
     "autoload": {
