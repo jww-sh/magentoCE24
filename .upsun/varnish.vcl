@@ -74,7 +74,7 @@ sub vcl_recv {
     # Varnish processing continues, allowing other VCL logic to be evaluated.
     # If a request was not whitelisted and did not trigger a block, it also continues.
 
-    if ( req.url !~ "^/(media|static|page_cache|banner|admin)/" || std.ip(req.http.X-Client-IP, "0.0.0.0") !~ allowed_ips) {
+    if ( req.url !~ "^/(media|static|page_cache|banner|admin)/" ) {
             if (vsthrottle.is_denied(req.http.X-Client-IP, 10, 15s, 123s)) {
                 # Client has exceeded 10 reqs per 15s.
                 # When this happens, block altogether for the next 123s.
