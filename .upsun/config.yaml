@@ -112,25 +112,25 @@ applications:
       build: |
         set -e
         #prep node as per https://experienceleague.adobe.com/en/docs/commerce-knowledge-base/kb/how-to/configure-npm-to-be-able-to-use-pwa-studio
-        unset NPM_CONFIG_PREFIX
-        export NVM_DIR="$PLATFORM_APP_DIR/.nvm"
+        #unset NPM_CONFIG_PREFIX
+        #export NVM_DIR="$PLATFORM_APP_DIR/.nvm"
         # install.sh will automatically install NodeJS based on the presence of $NODE_VERSION
-        curl -f -o- https://raw.githubusercontent.com/nvm-sh/nvm/$NVM_VERSION/install.sh | bash
-        [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-        npm -v
-        nvm install $NODE_VERSION
-        echo 'unset NPM_CONFIG_PREFIX' >> .environment
-        echo 'export NO_UPDATE_NOTIFIER=1' >> .environment
-        echo 'export NVM_DIR="$PLATFORM_APP_DIR/.nvm"' >> .environment
-        echo '[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"' >> .environment
-        wget https://github.com/magento/pwa-studio/archive/refs/tags/v14.3.1.zip
-        unzip v14.3.1.zip
-        mv pwa-studio-* pwa
-        cd pwa
-        npm install --global yarn
-        npm install --global rimraf
-        yarn run build
-        cd ..
+        #curl -f -o- https://raw.githubusercontent.com/nvm-sh/nvm/$NVM_VERSION/install.sh | bash
+        #[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+        #npm -v
+        #nvm install $NODE_VERSION
+        #echo 'unset NPM_CONFIG_PREFIX' >> .environment
+        #echo 'export NO_UPDATE_NOTIFIER=1' >> .environment
+        #echo 'export NVM_DIR="$PLATFORM_APP_DIR/.nvm"' >> .environment
+        #echo '[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"' >> .environment
+        #wget https://github.com/magento/pwa-studio/archive/refs/tags/v14.3.1.zip
+        #unzip v14.3.1.zip
+        #mv pwa-studio-* pwa
+        #cd pwa
+        #npm install --global yarn
+        #npm install --global rimraf
+        #yarn run build
+        #cd ..
         #install php application
         composer install --no-dev --no-interaction
         php ./vendor/bin/ece-tools run scenario/build/generate.xml
