@@ -29,6 +29,7 @@
         "genaker/module-opcache": "*",
         "jetrails/magento2-varnish": "*",
         "element119/module-admin-redis-report": "*",
+        "swissup/module-breeze": "*",
         "n98/magerun2-dist": "*"
     },
     "autoload": {
