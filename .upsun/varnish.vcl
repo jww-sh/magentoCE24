@@ -80,7 +80,7 @@ sub vcl_recv {
     }
 
     # Only allow a few POST/PUTs per client.
-    if (req.method == "POST" || req.method == "PUT") && (req.url !~ "^/admin") {
+    if ((req.method == "POST" || req.method == "PUT") && (req.url !~ "^/admin")) {
             if (vsthrottle.is_denied("rw" + req.http.X-Client-IP, 3, 10s, 123s)) {
                     return (synth(429, "Too Many Requests"));
             }
