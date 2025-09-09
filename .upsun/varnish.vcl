@@ -75,8 +75,8 @@ sub vcl_recv {
     # If a request was not whitelisted and did not trigger a block, it also continues.
 
     if (!( req.url ~ "^/(media|static|page_cache|banner|admin)/" || std.ip(req.http.X-Client-IP, "0.0.0.0") ~ allowed_ips )) {
-                if (vsthrottle.is_denied(req.http.X-Client-IP, 10, 15s, 123s)) {
-                    # Client has exceeded 10 reqs per 15s.
+                if (vsthrottle.is_denied(req.http.X-Client-IP, 30, 15s, 123s)) {
+                    # Client has exceeded 30 reqs per 15s.
                     # When this happens, block altogether for the next 123s.
                     return (synth(429, "Too Many Requests"));
                 }
@@ -84,7 +84,7 @@ sub vcl_recv {
 
     # Only allow a few POST/PUTs per client.
     if ((req.method == "POST" || req.method == "PUT") && (req.url !~ "^/admin")) {
-            if (vsthrottle.is_denied("rw" + req.http.X-Client-IP, 3, 10s, 123s)) {
+            if (vsthrottle.is_denied("rw" + req.http.X-Client-IP, 5, 10s, 123s)) {
                 return (synth(429, "Too Many Requests"));
             }
     }
