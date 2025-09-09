@@ -13,7 +13,6 @@ acl purge {
 }
 
 acl allowed_ips {
-    "127.0.0.1";
     "52.214.63.84";
     "52.208.123.9";
     "52.30.200.164";
@@ -42,7 +41,7 @@ sub vcl_recv {
             # Then, check if the score is greater than 25.
             if (std.integer(req.http.client-abuse-score, 0) > 25) {
                 # If the score is high, send a synthetic 403 Forbidden response.
-                return (synth(403, "High client abuse score detected."));
+                return (synth(403, "High client abuse score detected. Please check your IP on https://www.abuseipdb.com"));
             }
         }
 
@@ -68,26 +67,25 @@ sub vcl_recv {
                 return (synth(403, "Access from your network is restricted."));
             }
         }
-    }
 
-    # If a request was whitelisted, the 'if' block above was skipped.
-    # Varnish processing continues, allowing other VCL logic to be evaluated.
-    # If a request was not whitelisted and did not trigger a block, it also continues.
-
-    if (!( req.url ~ "^/(media|static|page_cache|banner|admin)/" || std.ip(req.http.X-Client-IP, "0.0.0.0") ~ allowed_ips )) {
-                if (vsthrottle.is_denied(req.http.X-Client-IP, 30, 15s, 123s)) {
-                    # Client has exceeded 30 reqs per 15s.
-                    # When this happens, block altogether for the next 123s.
-                    return (synth(429, "Too Many Requests"));
+        # --- Rate limiting ---
+        if (req.url !~ "^/(media|static|page_cache|banner|admin)/")  {
+                    if (vsthrottle.is_denied(req.http.X-Client-IP, 30, 15s, 15s)) {
+                        # Client has exceeded 30 reqs per 15s.
+                        # When this happens, block altogether for the next 15s.
+                        return (synth(429, "Too Many Requests - Please wait 15 seconds"));
+                    }
+        }
+        
+        # Only allow a few POST/PUTs per client.
+        if ((req.method == "POST" || req.method == "PUT") && (req.url !~ "^/admin")) {
+                if (vsthrottle.is_denied("rw" + req.http.X-Client-IP, 5, 10s, 15s)) {
+                    return (synth(429, "Too Many Requests PP - Please wait 15 seconds"));
                 }
+        }
     }
 
-    # Only allow a few POST/PUTs per client.
-    if ((req.method == "POST" || req.method == "PUT") && (req.url !~ "^/admin")) {
-            if (vsthrottle.is_denied("rw" + req.http.X-Client-IP, 5, 10s, 123s)) {
-                return (synth(429, "Too Many Requests"));
-            }
-    }
+
 
 
     # Remove empty query string parameters
@@ -126,14 +124,13 @@ sub vcl_recv {
                 set req.http.n-gone = xkey.softpurge("all");
             } else {
                 set req.http.n-gone = xkey.purge("all");
-                return (purge);
             }
             return (synth(200, "Invalidated " + req.http.n-gone + " objects full flush"));
         } else if (req.http.X-Magento-Tags-Pattern) {
             # replace "((^|,)cat_c(,|$))|((^|,)cat_p(,|$))" to be "cat_c,cat_p"
             set req.http.X-Magento-Tags-Pattern = regsuball(req.http.X-Magento-Tags-Pattern, "[^a-zA-Z0-9_-]+" ,",");
             set req.http.X-Magento-Tags-Pattern = regsuball(req.http.X-Magento-Tags-Pattern, "(^,*)|(,*$)" ,"");
-            if ( 1 ) { # CONFIGURABLE: Use softpurge
+            if ( 0 ) { # CONFIGURABLE: Use softpurge
                 set req.http.n-gone = xkey.softpurge(req.http.X-Magento-Tags-Pattern);
             } else {
                 set req.http.n-gone = xkey.purge(req.http.X-Magento-Tags-Pattern);
