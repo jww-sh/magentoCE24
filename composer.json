@@ -27,6 +27,8 @@
         "magento/module-cms-sample-data": "*",
         "magento/module-sales-sample-data": "*",
         "genaker/module-opcache": "*",
+        "jetrails/magento2-varnish": "*",
+        "element119/module-admin-redis-report": "*",
         "n98/magerun2-dist": "*"
     },
     "autoload": {
