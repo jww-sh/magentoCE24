@@ -81,9 +81,9 @@ applications:
       valkey:
         service: cache
         endpoint: valkey
-      valkey-slave:
-        service: cache
-        endpoint: valkey-replica
+      #valkey-slave: not currently implemented on non HA
+      #  service: cache
+      #  endpoint: valkey-replica
       valkey-session: session:valkey
       opensearch: indexer:opensearch
       rabbitmq: queue:rabbitmq
