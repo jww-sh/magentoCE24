@@ -10,12 +10,18 @@ acl purge {
     "52.214.63.84";
     "52.208.123.9";
     "52.30.200.164";
+    "52.209.117.215";
+    "63.35.7.171";
+    "63.35.46.240";
 }
 
 acl allowed_ips {
     "52.214.63.84";
     "52.208.123.9";
     "52.30.200.164";
+    "52.209.117.215";
+    "63.35.7.171";
+    "63.35.46.240";
 }
 
 
@@ -176,8 +182,8 @@ sub vcl_recv {
         set req.url = regsub(req.url, "[?|&]+$", "");
     }
 
-    # Media files caching
-    if (req.url ~ "^/(pub/)?media/") {
+    # Media and static files caching
+    if (req.url ~ "^/(pub/)?(media|static)/") {
         if ( 1 ) { # TODO MAKE CONFIGURABLE: Cache media files
             unset req.http.Https;
             unset req.http.X-Forwarded-Proto;
@@ -186,18 +192,7 @@ sub vcl_recv {
             return (pass);
         }
     }
-
-    # Static files caching
-    if (req.url ~ "^/(pub/)?static/") {
-        if ( 1 ) { # TODO MAKE CONFIGURABLE: Cache static files
-            unset req.http.Https;
-            unset req.http.X-Forwarded-Proto;
-            unset req.http.Cookie;
-        } else {
-            return (pass);
-        }
-    }
-
+  
     # Don't cache the authenticated GraphQL or requests
     if (req.url ~ "/graphql" && req.http.Authorization ~ "^Bearer") {
         return (pass);
@@ -213,7 +208,10 @@ sub vcl_hash {
 
     # To make sure http users don't see ssl warning
     hash_data(req.http.X-Forwarded-Proto);
-    
+
+    # To make sure multi hosts are not cached.
+    hash_data(req.http.host);
+
     /* {{ design_exceptions_code }} */
 
     if (req.url ~ "/graphql") {
@@ -245,17 +243,23 @@ sub vcl_backend_response {
     # Perform asynchronous revalidation while stale content is served
     set beresp.grace = 60m;
 
+
+    # All text-based content can be parsed as ESI
+    if (beresp.http.content-type ~ "text") {
+        set beresp.do_esi = true;
+    }
+
+    # Allow GZIP compression on all JavaScript files and all text-based content
+    if (bereq.url ~ "\.js$" || beresp.http.content-type ~ "text") {
+        set beresp.do_gzip = true;
+    }
+
     if (beresp.http.X-Magento-Tags) {
         # set comma separated xkey with "all" tag
         set beresp.http.XKey = beresp.http.X-Magento-Tags + ",all";
         unset beresp.http.X-Magento-Tags;
     } else {
         set beresp.http.XKey = "all";
-    }
-
-    # All text-based content can be parsed as ESI
-    if (beresp.http.content-type ~ "text") {
-        set beresp.do_esi = true;
     }
 
     # Cache HTTP 200 responses
@@ -297,6 +301,11 @@ sub vcl_deliver {
         if ( 0 ) { # TODO MAKE CONFIGURABLE: Enable/disable backward-forward cache (default enabled)
             set resp.http.Cache-Control = resp.http.Cache-Control + ", no-store";
         }
+    }
+    
+    # Prevent browser caching for customer and checkout pages
+    if (req.url ~ "^/(customer|checkout)(/|$)") {
+        set resp.http.Cache-Control = "no-store, no-cache, must-revalidate";
     }
 
     unset resp.http.XKey;
