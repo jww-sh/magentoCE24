@@ -41,7 +41,7 @@
         "magento/module-theme-sample-data": "*",
         "magento/module-widget-sample-data": "*",
         "magento/module-wishlist-sample-data": "*",
-        "magento/sample-data-media": "*"
+        "magento/sample-data-media": "*",
         "genaker/module-opcache": "*",
         "element119/module-admin-redis-report": "*",
         "n98/magerun2-dist": "*"
