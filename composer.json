@@ -1,6 +1,6 @@
 {
     "name": "magento/project-community-edition",
-    "description": "Adobe Commerce 2.4.X (Community Edition)",
+    "description": "Adobe Commerce 2.4.X (Enterprise Edition)",
     "type": "project",
     "license": [
         "OSL-3.0",
@@ -18,7 +18,7 @@
     },
     "require": {
         "magento/ece-tools": "*",
-        "magento/product-community-edition": "*",
+        "magento/magento-cloud-metapackage": "*",
         "magento/composer-root-update-plugin": "*",
         "markshust/magento2-module-disabletwofactorauth": "*",
         "magento/module-bundle-sample-data": "*",
