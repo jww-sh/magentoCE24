@@ -60,7 +60,7 @@ applications:
         NODE_VERSION: 20
         CONFIG__DEFAULT__SYSTEM__FULL_PAGE_CACHE__CACHING_APPLICATION: 2
       php:
-        memory_limit: "512M"
+        memory_limit: "1024M"
     # Configuration of the build of this application.
     build:
       flavor: none
