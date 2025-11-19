@@ -1,6 +1,6 @@
 {
-    "name": "magento/project-community-edition",
-    "description": "Adobe Commerce 2.4.X (Community Edition)",
+    "name": "magento/magento-upsun-flex-template",
+    "description": "Adobe Commerce Latest Stable",
     "type": "project",
     "license": [
         "OSL-3.0",
@@ -18,32 +18,9 @@
     },
     "require": {
         "magento/ece-tools": "*",
-        "magento/product-community-edition": "*",
+        "magento/magento-cloud-metapackage": "*",
         "magento/composer-root-update-plugin": "*",
         "markshust/magento2-module-disabletwofactorauth": "*",
-        "magento/module-bundle-sample-data": "*",
-        "magento/module-catalog-rule-sample-data": "*",
-        "magento/module-catalog-sample-data": "*",
-        "magento/module-cms-sample-data": "*",
-        "magento/module-configurable-sample-data": "*",
-        "magento/module-customer-sample-data": "*",
-        "magento/module-downloadable-sample-data": "*",
-        "magento/module-grouped-product-sample-data": "*",
-        "magento/module-msrp-sample-data": "*",
-        "magento/module-offline-shipping-sample-data": "*",
-        "magento/module-product-links-sample-data": "*",
-        "magento/module-review-sample-data": "*",
-        "magento/module-sales-rule-sample-data": "*",
-        "magento/module-sales-sample-data": "*",
-        "magento/module-sample-data": "*",
-        "magento/module-swatches-sample-data": "*",
-        "magento/module-tax-sample-data": "*",
-        "magento/module-theme-sample-data": "*",
-        "magento/module-widget-sample-data": "*",
-        "magento/module-wishlist-sample-data": "*",
-        "magento/sample-data-media": "*",
-        "genaker/module-opcache": "*",
-        "element119/module-admin-redis-report": "*",
         "n98/magerun2-dist": "*"
     },
     "autoload": {
@@ -62,9 +39,9 @@
             ]
         },
         "psr-4": {
+            "Magento\\Setup\\": "setup/src/Magento/Setup/",
             "Magento\\": "app/code/Magento/",
-            "Magento\\Framework\\": "lib/internal/Magento/Framework/",
-            "Magento\\Setup\\": "setup/src/Magento/Setup/"
+            "Zend\\Mvc\\Controller\\": "setup/src/Zend/Mvc/Controller/"
         }
     },
     "conflict": {
@@ -75,12 +52,11 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "Magento\\PhpStan\\": "dev/tests/static/framework/Magento/PhpStan/",
             "Magento\\Sniffs\\": "dev/tests/static/framework/Magento/Sniffs/",
-            "Magento\\TestFramework\\Inspection\\": "dev/tests/static/framework/Magento/TestFramework/Inspection/",
-            "Magento\\TestFramework\\Utility\\": "dev/tests/static/framework/Magento/TestFramework/Utility/",
             "Magento\\Tools\\": "dev/tools/Magento/Tools/",
-            "Magento\\Tools\\Sanity\\": "dev/build/publication/sanity/Magento/Tools/Sanity/"
+            "Magento\\Tools\\Sanity\\": "dev/build/publication/sanity/Magento/Tools/Sanity/",
+            "Magento\\TestFramework\\Inspection\\": "dev/tests/static/framework/Magento/TestFramework/Inspection/",
+            "Magento\\TestFramework\\Utility\\": "dev/tests/static/framework/Magento/TestFramework/Utility/"
         }
     },
     "replace": {
