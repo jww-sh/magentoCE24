@@ -60,9 +60,9 @@ applications:
       database:
         service: db
         endpoint: main
-      database-slave:
-        service: db-replica
-        endpoint: main
+      #database-slave:
+      #  service: db-replica
+      #  endpoint: main
       valkey:
         service: cache
         endpoint: valkey
@@ -209,23 +209,23 @@ services:
         replicator:
           privileges:
             main: replication
-  db-replica:
-    type: mariadb-replica:11.4
-    configuration:
-      properties:
-        optimizer_switch: "rowid_filter=off"
-        optimizer_use_condition_selectivity: 1
-        query_cache_size: 0
-        query_cache_type: 0
-      schemas:
-        - main
-      endpoints:
-        main:
-          default_schema: main
-          privileges:
-            main: admin
-    relationships:
-      primary: db:replicator
+  #db-replica:
+  #  type: mariadb-replica:11.4
+  #  configuration:
+  #    properties:
+  #      optimizer_switch: "rowid_filter=off"
+  #      optimizer_use_condition_selectivity: 1
+  #      query_cache_size: 0
+  #      query_cache_type: 0
+  #    schemas:
+  #      - main
+  #    endpoints:
+  #      main:
+  #        default_schema: main
+  #        privileges:
+  #          main: admin
+  #  relationships:
+  #    primary: db:replicator
 
 
   cache:
