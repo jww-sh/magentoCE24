@@ -231,14 +231,14 @@ services:
   cache:
     # https://docs.upsun.com/manage-resources/adjust-resources.html#adjust-a-container-profile
     container_profile: HIGH_MEMORY
-    type: valkey:8.0
+    type: valkey:8.1
     configuration:
       maxmemory_policy: allkeys-lru
 
   session:
     # https://docs.upsun.com/manage-resources/adjust-resources.html#adjust-a-container-profile
     container_profile: HIGH_MEMORY
-    type: valkey-persistent:8.0
+    type: valkey-persistent:8.1
     configuration:
       maxmemory_policy: allkeys-lru
 
