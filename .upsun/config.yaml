@@ -1,41 +1,4 @@
 applications:
-
-  stats-app:
-    # The type of the application to build.
-    type: "golang:1.24"
-    # The location of the application's code.
-    source:
-      root: "/"
-    mounts:
-      "/db":
-        source: tmp
-        source_path: "db"
-    web:
-      upstream:
-        socket_family: tcp
-        protocol: http
-      commands:
-        # If you change the build output in the build hook above, update this line as well.
-        start: ./varnishmon --period 60s --db db/varnishmon.db --varnishstat "/bin/curl -s varnishstats.internal:8081/stats" --port=${PORT}
-      locations:
-        /:
-          # Route all requests to the Go app, unconditionally.
-          allow: false
-          passthru: true
-    hooks:
-      build: |
-        set -e
-        wget -q https://github.com/allenta/varnishmon/releases/download/v0.8.6-1/varnishmon-0.8.6-1-01e02a7-bookworm-amd64.tgz
-        tar xfz varnishmon-*-amd64.tgz
-        mv varnishmon-*/varnishmon varnishmon
-        rm -rf varnishmon-*        
-    # Unique relationship _to_ Varnish from 'stats-app', where no relationship
-    #   is defined _from_ Varnish to the same app, to avoid circular relationships.
-    relationships:
-      varnishstats:
-        service: varnish
-        endpoint: "http+stats"
-
   app:
     operations:
       purge_all_varnish_cache:
@@ -52,13 +15,37 @@ applications:
       extensions:
         - xsl
         - sodium
-        - redis
         - blackfire
+        - apcu
+        - redis
     variables:
       env:
         NVM_VERSION: master
         NODE_VERSION: 20
+        #USE VARNISH
         CONFIG__DEFAULT__SYSTEM__FULL_PAGE_CACHE__CACHING_APPLICATION: 2
+        # Parallel indexing
+        MAGE_INDEXER_THREADS_COUNT: 1
+        # Use Application Lock
+        MAGENTO_DC_INDEXER__USE_APPLICATION_LOCK: true
+        # Catalog Inventory Stock
+        MAGENTO_INDEXER_BATCH_SIZE__CATALOGINVENTORY_STOCK__SIMPLE: 200
+        # Category Product
+        MAGENTO_INDEXER_BATCH_SIZE__CATALOG_CATEGORY_PRODUCT: 666
+        # Catalog Search Fulltext
+        MAGENTO_INDEXER_BATCH_SIZE__CATALOGSEARCH_FULLTEXT__PARTIAL_REINDEX: 100
+        MAGENTO_INDEXER_BATCH_SIZE__CATALOGSEARCH_FULLTEXT__MYSQL_GET: 500
+        MAGENTO_INDEXER_BATCH_SIZE__CATALOGSEARCH_FULLTEXT__ELASTIC_SAVE: 500
+        # Catalog Product Price
+        MAGENTO_INDEXER_BATCH_SIZE__CATALOG_PRODUCT_PRICE__SIMPLE: 200
+        MAGENTO_INDEXER_BATCH_SIZE__CATALOG_PRODUCT_PRICE__DEFAULT: 500
+        MAGENTO_INDEXER_BATCH_SIZE__CATALOG_PRODUCT_PRICE__CONFIGURABLE: 666
+        # Catalog Permissions Category
+        MAGENTO_INDEXER_BATCH_SIZE__CATALOGPERMISSIONS_CATEGORY: 999
+        # Inventory
+        MAGENTO_INDEXER_BATCH_SIZE__INVENTORY__SIMPLE: 210
+        MAGENTO_INDEXER_BATCH_SIZE__INVENTORY__DEFAULT: 510
+        MAGENTO_INDEXER_BATCH_SIZE__INVENTORY__CONFIGURABLE: 616
       php:
         memory_limit: "1024M"
     # Configuration of the build of this application.
@@ -75,6 +62,7 @@ applications:
         endpoint: main
       database-slave:
         service: db-replica
+        endpoint: main
       valkey:
         service: cache
         endpoint: valkey
@@ -83,7 +71,12 @@ applications:
       #  endpoint: valkey-replica
       valkey-session: session:valkey
       opensearch: indexer:opensearch
-      rabbitmq: queue:rabbitmq
+      activemq-artemis:
+        service: queue
+        endpoint: activemq-artemis
+
+
+
     # The 'mounts' describe writable, persistent filesystem mounts in the application.
     mounts:
       "/var":
@@ -130,8 +123,10 @@ applications:
         #cd ..
         #install php application
         composer install --no-dev --no-interaction
+        wget https://raw.githubusercontent.com/magento/magento-cloud/refs/heads/master/.magento.app.yaml
         php ./vendor/bin/ece-tools run scenario/build/generate.xml
         php ./vendor/bin/ece-tools run scenario/build/transfer.xml
+        #this is needed to ensure crons run 1 process at a time in the worker container
         sed -i 's/_process>1<\/use_/_process>0<\/use_/g' ${PLATFORM_APP_DIR}/vendor/magento/*/etc/cron_groups.xml
       deploy: |
         php ./vendor/bin/ece-tools run scenario/deploy.xml
@@ -148,6 +143,9 @@ applications:
       logrotate:
         spec: "45 1 * * *"
         cmd: shtool rotate -n10 $PLATFORM_APP_DIR/var/log/*.log
+      logrotatesubdirs:
+        spec: "45 1 * * *"
+        cmd: shtool rotate -n10 $PLATFORM_APP_DIR/var/log/*/*.log
       reportcleanup:
         spec: "0 2 * * *"
         cmd: find $PLATFORM_APP_DIR/var/report/* -mtime +10 -delete
@@ -173,6 +171,8 @@ applications:
               passthru: "/media/apple-developer-merchantid-domain-association.xml"
             ^/.well-known/apple-developer-merchantid-domain-association.txt$:
               passthru: "/media/apple-developer-merchantid-domain-association.txt"
+            ^/loaderio-57b4d7c1bba248849fbf9600292c60b4.txt$:
+              passthru: "/media/loaderio-57b4d7c1bba248849fbf9600292c60b4.txt"
         "/media":
           root: "pub/media"
           allow: true
@@ -209,7 +209,6 @@ services:
         replicator:
           privileges:
             main: replication
-
   db-replica:
     type: mariadb-replica:11.4
     configuration:
@@ -227,6 +226,7 @@ services:
             main: admin
     relationships:
       primary: db:replicator
+
 
   cache:
     # https://docs.upsun.com/manage-resources/adjust-resources.html#adjust-a-container-profile
@@ -249,7 +249,7 @@ services:
         - analysis-phonetic
         - analysis-icu
   queue:
-    type: rabbitmq:4.1
+    type: activemq-artemis:2
 
   varnish:
     type: varnish:7.6
@@ -267,11 +267,6 @@ routes:
   https://{default}/:
     type: upstream
     upstream: varnish:http
-    cache:
-      enabled: false
-  https://stats.{default}/:
-    type: upstream
-    upstream: stats-app:http
     cache:
       enabled: false
   https://{all}/:
