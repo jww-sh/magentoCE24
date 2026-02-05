@@ -19,6 +19,7 @@
     "require": {
         "magento/ece-tools": "*",
         "magento/product-community-edition": "*",
+        "magento/magento-cloud-metapackage": "*",
         "magento/composer-root-update-plugin": "*",
         "markshust/magento2-module-disabletwofactorauth": "*",
         "magento/module-bundle-sample-data": "*",
@@ -42,8 +43,6 @@
         "magento/module-widget-sample-data": "*",
         "magento/module-wishlist-sample-data": "*",
         "magento/sample-data-media": "*",
-        "genaker/module-opcache": "*",
-        "element119/module-admin-redis-report": "*",
         "n98/magerun2-dist": "*"
     },
     "autoload": {
