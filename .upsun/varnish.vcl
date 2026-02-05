@@ -1,4 +1,4 @@
-# https://gist.github.com/peterjaap/7f7bf11aa7d089792e8fcc2fb34760fa 
+# https://gist.github.com/peterjaap/7f7bf11aa7d089792e8fcc2fb34760fa
 
 import cookie;
 import xkey;
@@ -7,27 +7,125 @@ import vsthrottle;
 # Add hostnames, IP addresses and subnets that are allowed to purge content
 #https://docs.platform.sh/development/regions.html#:~:text=52.208.123.9,52.30.200.164
 acl purge {
-    "52.214.63.84";
-    "52.208.123.9";
+    "13.48.116.14";
+    "13.48.202.56";
+    "13.51.46.87";
+    "13.54.121.225";
+    "13.55.135.0";
+    "13.55.215.151";
+    "18.200.157.200";
+    "18.200.158.188";
+    "18.200.184.206";
+    "20.188.46.156";
+    "20.188.46.158";
+    "20.188.46.165";
+    "34.65.72.28";
+    "34.65.144.16";
+    "34.65.197.163";
+    "34.89.33.176";
+    "34.107.79.7";
+    "34.147.217.161";
+    "34.148.171.57";
+    "34.159.181.149";
+    "34.159.207.210";
+    "34.238.64.193";
+    "35.101.40.168";
+    "35.157.118.4";
+    "35.157.155.88";
+    "35.157.161.242";
+    "35.182.24.224";
+    "35.182.220.113";
+    "35.243.131.172";
+    "35.246.36.142";
+    "40.91.69.215";
+    "40.126.245.226";
+    "52.4.246.137";
     "52.30.200.164";
+    "52.60.213.255";
+    "52.148.128.255";
+    "52.208.123.9";
     "52.209.117.215";
+    "52.214.63.84";
+    "52.250.13.106";
+    "54.72.94.105";
+    "54.76.137.67";
+    "54.76.137.94";
+    "54.88.149.31";
+    "54.157.66.30";
+    "54.209.114.37";
+    "54.210.53.51";
     "63.35.7.171";
     "63.35.46.240";
+    "104.196.203.234";
+    "104.210.116.116";
+    "104.210.117.92";
+    "135.125.89.47";
+    "135.125.90.255";
+    "135.125.91.125";
 }
 
 acl allowed_ips {
-    "52.214.63.84";
-    "52.208.123.9";
+    "13.48.116.14";
+    "13.48.202.56";
+    "13.51.46.87";
+    "13.54.121.225";
+    "13.55.135.0";
+    "13.55.215.151";
+    "18.200.157.200";
+    "18.200.158.188";
+    "18.200.184.206";
+    "20.188.46.156";
+    "20.188.46.158";
+    "20.188.46.165";
+    "34.65.72.28";
+    "34.65.144.16";
+    "34.65.197.163";
+    "34.89.33.176";
+    "34.107.79.7";
+    "34.147.217.161";
+    "34.148.171.57";
+    "34.159.181.149";
+    "34.159.207.210";
+    "34.238.64.193";
+    "35.101.40.168";
+    "35.157.118.4";
+    "35.157.155.88";
+    "35.157.161.242";
+    "35.182.24.224";
+    "35.182.220.113";
+    "35.243.131.172";
+    "35.246.36.142";
+    "40.91.69.215";
+    "40.126.245.226";
+    "52.4.246.137";
     "52.30.200.164";
+    "52.60.213.255";
+    "52.148.128.255";
+    "52.208.123.9";
     "52.209.117.215";
+    "52.214.63.84";
+    "52.250.13.106";
+    "54.72.94.105";
+    "54.76.137.67";
+    "54.76.137.94";
+    "54.88.149.31";
+    "54.157.66.30";
+    "54.209.114.37";
+    "54.210.53.51";
     "63.35.7.171";
     "63.35.46.240";
+    "104.196.203.234";
+    "104.210.116.116";
+    "104.210.117.92";
+    "135.125.89.47";
+    "135.125.90.255";
+    "135.125.91.125";
 }
 
 
 sub vcl_recv {
 
-    #https://docs.upsun.com/add-services/varnish.html#2-create-a-vcl-template:~:text=sub%20vcl_recv%20%7B-,set%20req.backend_hint%20%3D%20application.backend()%3B,-%7D 
+    #https://docs.upsun.com/add-services/varnish.html#2-create-a-vcl-template:~:text=sub%20vcl_recv%20%7B-,set%20req.backend_hint%20%3D%20application.backend()%3B,-%7D
     set req.backend_hint = application.backend();
     set req.http.grace = "none";
 
@@ -74,28 +172,14 @@ sub vcl_recv {
             }
         }
 
-        # --- Rate limiting ---
-        if (req.url !~ "^/(media|static|page_cache|banner|admin)/")  {
-                    if (vsthrottle.is_denied(req.http.X-Client-IP, 30, 15s, 15s)) {
-                        # Client has exceeded 30 reqs per 15s.
-                        # When this happens, block altogether for the next 15s.
-                        return (synth(429, "Too Many Requests - Please wait 15 seconds"));
-                    }
-        }
-        
-        # Only allow a few POST/PUTs per client.
-        if ((req.method == "POST" || req.method == "PUT") && (req.url !~ "^/admin")) {
-                if (vsthrottle.is_denied("rw" + req.http.X-Client-IP, 5, 10s, 15s)) {
-                    return (synth(429, "Too Many Requests PP - Please wait 15 seconds"));
-                }
-        }
+
     }
 
 
 
 
     # Remove empty query string parameters
-    # e.g.: www.example.com/index.html?    
+    # e.g.: www.example.com/index.html?
     if (req.url ~ "\?$") {
         set req.url = regsub(req.url, "\?$", "");
     }
@@ -192,11 +276,17 @@ sub vcl_recv {
             return (pass);
         }
     }
-  
+
     # Don't cache the authenticated GraphQL or requests
     if (req.url ~ "/graphql" && req.http.Authorization ~ "^Bearer") {
         return (pass);
     }
+
+    # Don't cache the basic authenticated requests
+    if (req.http.Authorization ~ "^Basic") {
+        return (pass);
+    }
+
 
     return (hash);
 }
@@ -270,7 +360,7 @@ sub vcl_backend_response {
         set beresp.uncacheable = true;
         return (deliver);
     }
-    
+
     # Don't cache if the request cache ID doesn't match the response cache ID for graphql requests
     if (bereq.url ~ "/graphql" && bereq.http.X-Magento-Cache-Id && bereq.http.X-Magento-Cache-Id != beresp.http.X-Magento-Cache-Id) {
        set beresp.ttl = 120s;
@@ -302,7 +392,7 @@ sub vcl_deliver {
             set resp.http.Cache-Control = resp.http.Cache-Control + ", no-store";
         }
     }
-    
+
     # Prevent browser caching for customer and checkout pages
     if (req.url ~ "^/(customer|checkout)(/|$)") {
         set resp.http.Cache-Control = "no-store, no-cache, must-revalidate";
@@ -318,4 +408,13 @@ sub vcl_deliver {
     unset resp.http.X-Varnish;
     unset resp.http.Via;
     unset resp.http.Link;
+}
+
+sub vcl_synth {
+    if (resp.status == 401) {
+        set resp.http.WWW-Authenticate = {"Basic realm="Restricted area""};
+        set resp.http.Content-Type = "text/plain";
+        set resp.body = "Access Denied";
+        return (deliver);
+    }
 }
