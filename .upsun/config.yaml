@@ -128,8 +128,9 @@ applications:
         php ./vendor/bin/ece-tools run scenario/build/transfer.xml
         #this is needed to ensure crons run 1 process at a time in the worker container
         sed -i 's/_process>1<\/use_/_process>0<\/use_/g' ${PLATFORM_APP_DIR}/vendor/magento/*/etc/cron_groups.xml
-        #hack due to adobe artemis validation issue
-        sed -i 's/"2.42.0"/"^2"/g' ${PLATFORM_APP_DIR}/vendor/magento/ece-tools/src/Lib/Validator/Service/ActivemqArtemis.php
+        #hack due to adobe artemis and redis 8.1 validation issue
+        sed -i 's/2.42.0/^2/g' ${PLATFORM_APP_DIR}/vendor/magento/ece-tools/src/Service/Validator.php
+        sed -i 's/~8\.0\.0 || ~8\.0\.1/^8/g' ${PLATFORM_APP_DIR}/vendor/magento/ece-tools/src/Service/Validator.php
       deploy: |
         php ./vendor/bin/ece-tools run scenario/deploy.xml
       post_deploy: |
