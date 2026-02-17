@@ -288,3 +288,8 @@ routes:
     upstream: varnish:http
     cache:
       enabled: false
+  http://section.google.com/:
+    type: upstream
+    upstream: varnish:http
+    cache:
+      enabled: false
