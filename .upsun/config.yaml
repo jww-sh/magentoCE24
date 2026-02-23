@@ -269,27 +269,11 @@ services:
 routes:
   https://{default}/:
     type: upstream
-    upstream: varnish:http
+    upstream: app:http
     cache:
       enabled: false
   https://{all}/:
     type: upstream
-    upstream: varnish:http
-    cache:
-      enabled: false
-  #http for purge
-  http://{default}/:
-    type: upstream
-    upstream: varnish:http
-    cache:
-      enabled: false
-  http://{all}/:
-    type: upstream
-    upstream: varnish:http
-    cache:
-      enabled: false
-  http://section.google.com/:
-    type: upstream
-    upstream: varnish:http
+    upstream: app:http
     cache:
       enabled: false
