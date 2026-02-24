@@ -254,18 +254,6 @@ services:
   queue:
     type: activemq-artemis:2
 
-  varnish:
-    type: varnish:7.6
-    relationships:
-      application: 'app:http'
-    configuration:
-      vcl: !include
-        type: string
-        path: varnish.vcl
-
-
-
-
 routes:
   https://{default}/:
     type: upstream
