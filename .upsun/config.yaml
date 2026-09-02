@@ -21,7 +21,7 @@ applications:
     variables:
       env:
         NVM_VERSION: master
-        NODE_VERSION: 20
+        NODE_VERSION: 26
         #USE VARNISH
         CONFIG__DEFAULT__SYSTEM__FULL_PAGE_CACHE__CACHING_APPLICATION: 2
         # Parallel indexing
@@ -123,14 +123,10 @@ applications:
         #cd ..
         #install php application
         composer install --no-dev --no-interaction
-        wget https://raw.githubusercontent.com/magento/magento-cloud/refs/heads/master/.magento.app.yaml
         php ./vendor/bin/ece-tools run scenario/build/generate.xml
         php ./vendor/bin/ece-tools run scenario/build/transfer.xml
         #this is needed to ensure crons run 1 process at a time in the worker container
         sed -i 's/_process>1<\/use_/_process>0<\/use_/g' ${PLATFORM_APP_DIR}/vendor/magento/*/etc/cron_groups.xml
-        #hack due to adobe artemis and redis 8.1 validation issue
-        sed -i 's/2.42.0/^2/g' ${PLATFORM_APP_DIR}/vendor/magento/ece-tools/src/Service/Validator.php
-        sed -i 's/~8\.0\.0 || ~8\.0\.1/^8/g' ${PLATFORM_APP_DIR}/vendor/magento/ece-tools/src/Service/Validator.php
       deploy: |
         php ./vendor/bin/ece-tools run scenario/deploy.xml
       post_deploy: |
@@ -234,14 +230,14 @@ services:
   cache:
     # https://docs.upsun.com/manage-resources/adjust-resources.html#adjust-a-container-profile
     container_profile: HIGH_MEMORY
-    type: valkey:8.1
+    type: valkey:9
     configuration:
       maxmemory_policy: allkeys-lru
 
   session:
     # https://docs.upsun.com/manage-resources/adjust-resources.html#adjust-a-container-profile
     container_profile: HIGH_MEMORY
-    type: valkey-persistent:8.1
+    type: valkey-persistent:9
     configuration:
       maxmemory_policy: allkeys-lru
 
