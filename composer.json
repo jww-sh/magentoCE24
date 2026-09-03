@@ -1,6 +1,6 @@
 {
     "name": "magento/project-community-edition",
-    "description": "Adobe Commerce 2.4.X (Community Edition)",
+    "description": "Magento 2.4-develop (Community Edition)",
     "type": "project",
     "license": [
         "OSL-3.0",
@@ -19,7 +19,7 @@
     "require": {
         "magento/ece-tools": "*",
         "magento/composer": "*",
-        "magento/product-community-edition": "*",
+        "magento/magento2-base": "2.4-develop",
         "magento/magento-cloud-patches": "*",
         "magento/composer-root-update-plugin": "*",
         "magento/composer-dependency-version-audit-plugin": "*",
