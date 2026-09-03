@@ -6,7 +6,7 @@
 </a>
 </p>
 
-This template builds Magento 2 CE on Platform.sh and Upsun.  It includes the Magento ECE-Tools to run effectively in a build-and-deploy environment.  A MariaDB Database, Opensearch Indexer, ActiveMQ Message Queue and Valkey Cache server come pre-configured and work out of the box. 
+This template builds Magento 2.4.9+ CE on Platform.sh and Upsun.  It includes the Magento ECE-Tools to run effectively in a build-and-deploy environment.  A MariaDB Database, Opensearch Indexer, ActiveMQ Message Queue and Valkey Cache server come pre-configured and work out of the box. 
 
 Magento is a fully integrated ecommerce system and web store written in PHP.  This is the Open Source version of Magento.
 
