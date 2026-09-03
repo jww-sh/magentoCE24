@@ -19,7 +19,7 @@
     "require": {
         "magento/ece-tools": "*",
         "magento/composer": "*",
-        "magento/framework": "dev-2.4-develop as 103.0.9", #hack to ensure we get 2.4.9 August update
+        "magento/framework": "dev-2.4-develop as 103.0.9", 
         "magento/product-community-edition": "*",
         "magento/magento-cloud-patches": "*",
         "magento/composer-root-update-plugin": "*",
