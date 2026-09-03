@@ -301,5 +301,3 @@ tasks:
     run:
       command: "bin/magento indexer:reindex"
       timeout: 3600
-    relationships:
-      database: {}
