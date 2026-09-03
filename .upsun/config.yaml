@@ -9,7 +9,7 @@ applications:
     # https://docs.upsun.com/manage-resources/adjust-resources.html#adjust-a-container-profile
     container_profile: BALANCED
     # The runtime the application uses.
-    type: php:8.4
+    type: php:8.5
     # Specify additional PHP extensions that should be loaded.
     runtime:
       extensions:
