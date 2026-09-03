@@ -20,7 +20,6 @@
         "magento/ece-tools": "*",
         "magento/composer": "*",
         "magento/product-community-edition": "*",
-        "magento/magento2-base": "2.4-develop as 2.4.9",
         "magento/magento-cloud-patches": "*",
         "magento/composer-root-update-plugin": "*",
         "magento/composer-dependency-version-audit-plugin": "*",
@@ -99,7 +98,7 @@
 
         {
             "type": "vcs",
-            "url": "https://github.com/magento/magento2"
+            "url": "https://github.com/magento/magento-cloud"
         },
         {
             "type": "vcs",
