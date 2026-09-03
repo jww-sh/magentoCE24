@@ -20,6 +20,7 @@
         "magento/ece-tools": "*",
         "magento/composer": "*",
         "magento/product-community-edition": "*",
+        "magento/magento-cloud-patches": "*",
         "magento/composer-root-update-plugin": "*",
         "magento/composer-dependency-version-audit-plugin": "*",
         "markshust/magento2-module-disabletwofactorauth": "*",
