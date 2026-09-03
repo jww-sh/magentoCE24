@@ -44,6 +44,7 @@
         "magento/module-widget-sample-data": "*",
         "magento/module-wishlist-sample-data": "*",
         "magento/sample-data-media": "*",
+        "fastly/magento2": "*",
         "n98/magerun2-dist": "*"
     },
     "autoload": {
