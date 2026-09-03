@@ -22,7 +22,7 @@
         "magento/magento-cloud-patches": "*",
         "magento/composer-root-update-plugin": "*",
         "magento/composer-dependency-version-audit-plugin": "*",
-        "magento/magento-cloud-metapackage": ">=2.4.9 <2.4.10",
+        "magento/magento-cloud-metapackage": "*",
         "markshust/magento2-module-disabletwofactorauth": "*",
         "magento/module-bundle-sample-data": "*",
         "magento/module-catalog-rule-sample-data": "*",
