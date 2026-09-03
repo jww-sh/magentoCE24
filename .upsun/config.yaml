@@ -292,3 +292,7 @@ routes:
     upstream: varnish:http
     cache:
       enabled: false
+
+tasks:
+  reindex all:
+    command: "bin/magento indexer:reindex"
