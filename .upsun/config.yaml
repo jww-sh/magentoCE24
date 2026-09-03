@@ -294,5 +294,5 @@ routes:
       enabled: false
 
 tasks:
-  reindex all:
+  reindex_all:
     command: "bin/magento indexer:reindex"
