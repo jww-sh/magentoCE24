@@ -97,7 +97,7 @@
         },
         {
             "type": "composer",
-            "url": "https://packagento.com/"
+            "url": "https://repo-magento-mirror.fooman.co.nz/"
         }
     ],
     "extra": {
