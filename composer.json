@@ -22,6 +22,7 @@
         "magento/magento-cloud-patches": "*",
         "magento/composer-root-update-plugin": "*",
         "magento/composer-dependency-version-audit-plugin": "*",
+        "magento/magento-cloud-metapackage": ">=2.4.9 <2.4.10",
         "markshust/magento2-module-disabletwofactorauth": "*",
         "magento/module-bundle-sample-data": "*",
         "magento/module-catalog-rule-sample-data": "*",
@@ -87,36 +88,8 @@
     "prefer-stable": true,
     "repositories": [
         {
-            "type": "vcs",
-            "url": "https://github.com/magento/ece-tools"
-        },
-        {
-            "type": "vcs",
-            "url": "https://github.com/magento/magento-cloud-components"
-        },
-        {
-            "type": "vcs",
-            "url": "https://github.com/magento/magento-cloud-docker"
-        },
-        {
-            "type": "vcs",
-            "url": "https://github.com/magento/magento-cloud-patches"
-        },
-        {
-            "type": "vcs",
-            "url": "https://github.com/magento/quality-patches"
-        },
-        {
             "type": "composer",
             "url": "https://repo.magento.com/"
-        },
-        {
-            "type": "composer",
-            "url": "https://mirror.mage-os.org/"
-        },
-        {
-            "type": "composer",
-            "url": "https://repo-magento-mirror.fooman.co.nz/"
         }
     ],
     "extra": {
