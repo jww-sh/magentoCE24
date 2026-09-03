@@ -19,8 +19,8 @@
     "require": {
         "magento/ece-tools": "*",
         "magento/composer": "*",
-        "magento/magento2": "*",
         "magento/product-community-edition": "*",
+        "magento/magento2-base": "2.4-develop as 2.4.9",
         "magento/magento-cloud-patches": "*",
         "magento/composer-root-update-plugin": "*",
         "magento/composer-dependency-version-audit-plugin": "*",
@@ -96,6 +96,7 @@
             "type": "composer",
             "url": "https://mirror.mage-os.org/"
         },
+
         {
             "type": "vcs",
             "url": "https://github.com/magento/magento2"
