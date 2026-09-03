@@ -19,6 +19,7 @@
     "require": {
         "magento/ece-tools": "*",
         "magento/composer": "*",
+        "magento/magento2": "*",
         "magento/product-community-edition": "*",
         "magento/magento-cloud-patches": "*",
         "magento/composer-root-update-plugin": "*",
@@ -91,18 +92,6 @@
     "minimum-stability": "dev",
     "prefer-stable": true,
     "repositories": [
-        {
-            "type": "package",
-            "package": {
-                "name": "magento/magento2-base",
-                 "version": "^2.4",
-                "source": {
-                    "url": "https://github.com/magento/magento2.git",
-                    "type": "git",
-                    "reference": "2.4-develop"
-                }
-            }
-        },
         {
             "type": "composer",
             "url": "https://mirror.mage-os.org/"
