@@ -7,7 +7,7 @@
 name: app
 
 # The runtime the application uses.
-type: php:8.3
+type: php:8.5
 
 # Specify additional PHP extensions that should be loaded.
 runtime:
@@ -23,7 +23,7 @@ variables:
         NVM_VERSION: master
         NODE_VERSION: 20
         #https://developer.adobe.com/commerce/php/development/components/indexing/optimization/
-        MAGENTO_DC_INDEXER__USE_APPLICATION_LOCK: true
+        MAGENTO_DC_INDEXER__USE_APPLICATION_LOCK: false
         MAGENTO_INDEXER_BATCH_SIZE__CATALOGINVENTORY_STOCK__SIMPLE: 200
         MAGENTO_INDEXER_BATCH_SIZE__CATALOG_CATEGORY_PRODUCT: 666
         MAGENTO_INDEXER_BATCH_SIZE__CATALOGSEARCH_FULLTEXT__PARTIAL_REINDEX: 100
@@ -54,22 +54,22 @@ dependencies:
 # to the application in the PLATFORM_RELATIONSHIPS variable. The right-hand
 # side is in the form `<service name>:<endpoint name>`.
 relationships:
-    database: 
+    database:
       service: db
       endpoint: write
-    database-slave: 
+    database-slave:
       service: db
       endpoint: read
-    redis:
+    valkey:
         service: cache
-        endpoint: redis
+        endpoint: valkey
     #redis-slave will not be presented on single node clusters    
-    redis-slave:
-        service: cache
-        endpoint: redis-replica
-    redis-session: session:redis
+    #valkey-slave:
+    #    service: cache
+    #    endpoint: valkey-replica
+    valkey-session: session:redis
     opensearch: indexer:opensearch
-    rabbitmq: queue:rabbitmq
+    activemq-artemis: queue:activemq-artemis
 
 # The size of the persistent disk of the application (in MB).
 disk: 1024
@@ -94,19 +94,19 @@ hooks:
   build: |
     set -e
     #prep node as per https://experienceleague.adobe.com/en/docs/commerce-knowledge-base/kb/how-to/configure-npm-to-be-able-to-use-pwa-studio
-    unset NPM_CONFIG_PREFIX
-    export NVM_DIR="$PLATFORM_APP_DIR/.nvm"
+    #unset NPM_CONFIG_PREFIX
+    #export NVM_DIR="$PLATFORM_APP_DIR/.nvm"
     # install.sh will automatically install NodeJS based on the presence of $NODE_VERSION
-    curl -f -o- https://raw.githubusercontent.com/nvm-sh/nvm/$NVM_VERSION/install.sh | bash
-    [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-    npm -v
-    nvm install $NODE_VERSION
-    echo 'unset NPM_CONFIG_PREFIX' >> .environment
-    echo 'export NO_UPDATE_NOTIFIER=1' >> .environment
-    echo 'export NVM_DIR="$PLATFORM_APP_DIR/.nvm"' >> .environment
-    echo '[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"' >> .environment
+    #curl -f -o- https://raw.githubusercontent.com/nvm-sh/nvm/$NVM_VERSION/install.sh | bash
+    #[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+    #npm -v
+    #nvm install $NODE_VERSION
+    #echo 'unset NPM_CONFIG_PREFIX' >> .environment
+    #echo 'export NO_UPDATE_NOTIFIER=1' >> .environment
+    #echo 'export NVM_DIR="$PLATFORM_APP_DIR/.nvm"' >> .environment
+    3echo '[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"' >> .environment
     #install php application
-    composer install --no-dev --no-interaction
+    composer --no-ansi --no-dev --no-interaction install --prefer-dist --optimize-autoloader
     php ./vendor/bin/ece-tools run scenario/build/generate.xml
     php ./vendor/bin/ece-tools run scenario/build/transfer.xml
     sed -i 's/_process>1<\/use_/_process>0<\/use_/g' ${PLATFORM_APP_DIR}/vendor/magento/*/etc/cron_groups.xml

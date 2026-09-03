@@ -12,9 +12,9 @@ Magento is a fully integrated ecommerce system and web store written in PHP.  Th
 
 ## Features
 
-* PHP 8.4
-* MariaDB 11.4
-* Valkey 8.1
+* PHP 8.5
+* MariaDB 12.3
+* Valkey 9.0
 * Opensearch 3
 * ActiveMQ Artemis 2
 * Automatic TLS certificates
@@ -24,9 +24,8 @@ Magento is a fully integrated ecommerce system and web store written in PHP.  Th
 
 1. Get your Magento Repository authentication keys https://devdocs.magento.com/guides/v2.4/install-gde/prereq/connect-auth.html if you want to adjust the composer repo to https://repo.magento.com/
 2. Add your keys as a project level variable `platform variable:create -p <your Platform.sh projectID> --level project --name env:COMPOSER_AUTH --json true --visible-runtime false --sensitive true --visible-build true  --value '{"http-basic":{"repo.magento.com":{"username":"<your public key>","password":"<your private key>"}}}'`
-3. Replace https://mirror.mage-os.org/ in the composer.json with the https://repo.magento.com/
-4. Please disable Magento two factor auth for admin logins on development enviroments with mail disabled, please SSH into your application and run `bin/magento config:set twofactorauth/general/enable 0` 
-5. Please add an admin user using `php bin/magento admin:user:create`.  Login at `/admin` in your browser. 
+3. Please disable Magento two factor auth for admin logins on development enviroments with mail disabled, please SSH into your application and run `bin/magento config:set twofactorauth/general/enable 0` 
+4. Please add an admin user using `php bin/magento admin:user:create`.  Login at `/admin` in your browser. 
 
 ## Customizations
 
@@ -34,8 +33,6 @@ If using this project as a reference for your own existing project, replicate th
 
 * The `.platform.app.yaml`, `.platform/services.yaml`, and `.platform/routes.yaml` files have been added.  These provide Platform.sh-specific configuration and are present in all projects on Platform.sh.  You may customize them as you see fit.
 * The `.upsun/config.yaml` files has been added. This provides Upsun-specific configuration which can also be reviewed.
-* The `composer.json` file has had the ECE-Tools package and its dependencies added.
-* We are using https://mirror.mage-os.org/ and GitHub for the Magento sources.
 * Magento crons have been setup to ensure they are run sequentially to ensure there is availible memory
 * A logrotate and report housekeeping cron have been added.
 * A module which allows two factor authentication to be disabled has been added to `composer.json`.

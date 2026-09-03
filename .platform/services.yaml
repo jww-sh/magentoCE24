@@ -1,10 +1,10 @@
 db:
-    type: mariadb:10.6
-    disk: 1500
+    type: mariadb:12.3
+    disk: 2500
     configuration:
-      properties:
-        optimizer_switch: "rowid_filter=off"
-        optimizer_use_condition_selectivity: 1
+      #properties:
+      #  optimizer_switch: "rowid_filter=off"
+      #  optimizer_use_condition_selectivity: 1
       schemas:
         - main
       endpoints:
@@ -18,23 +18,23 @@ db:
             main: ro
 
 cache:
-    type: redis:7.2
+    type: valkey:9.0
     configuration:
         maxmemory_policy: allkeys-lru
 
 session:
-    type: redis-persistent:7.2
+    type: valkey-persistent:9.0
     disk: 512
     configuration:
         maxmemory_policy: allkeys-lru
 
 indexer:
-    type: opensearch:2
+    type: opensearch:3
     disk: 512
     configuration:
         plugins:
             - analysis-phonetic
             - analysis-icu
 queue:
-    type: rabbitmq:3.13
+    type: activemq-artemis:2
     disk: 1024
