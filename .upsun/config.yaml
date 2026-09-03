@@ -122,7 +122,7 @@ applications:
         #yarn run build
         #cd ..
         #install php application
-        composer install --no-dev --no-interaction
+        composer --no-ansi --no-dev --no-interaction install --prefer-dist --optimize-autoloader
         php ./vendor/bin/ece-tools run scenario/build/generate.xml
         php ./vendor/bin/ece-tools run scenario/build/transfer.xml
         #this is needed to ensure crons run 1 process at a time in the worker container
