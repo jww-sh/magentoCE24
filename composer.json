@@ -19,6 +19,7 @@
     "require": {
         "magento/ece-tools": "*",
         "magento/composer": "*",
+        "magento/framework": "dev-2.4-develop as 103.0.9", #hack to ensure we get 2.4.9 August update
         "magento/product-community-edition": "*",
         "magento/magento-cloud-patches": "*",
         "magento/composer-root-update-plugin": "*",
@@ -92,13 +93,8 @@
     "prefer-stable": true,
     "repositories": [
         {
-            "type": "composer",
-            "url": "https://mirror.mage-os.org/"
-        },
-
-        {
             "type": "vcs",
-            "url": "https://github.com/magento/magento-cloud"
+            "url": "https://github.com/magento/magento2"
         },
         {
             "type": "vcs",
@@ -119,6 +115,10 @@
         {
             "type": "vcs",
             "url": "https://github.com/magento/quality-patches"
+        },
+        {
+            "type": "composer",
+            "url": "https://mirror.mage-os.org/"
         },
         {
             "type": "composer",
