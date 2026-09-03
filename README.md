@@ -17,7 +17,6 @@ Magento is a fully integrated ecommerce system and web store written in PHP.  Th
 * Valkey 9.0
 * Opensearch 3
 * ActiveMQ Artemis 2
-* Automatic TLS certificates
 * Composer-based build
 
 ## Composer Authentication and Post Installation Setup
