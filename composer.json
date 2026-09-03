@@ -95,7 +95,6 @@
             "type": "package",
             "package": {
                 "name": "magento/magento2-base",
-                "version": "*",
                 "source": {
                     "url": "https://github.com/magento/magento2.git",
                     "type": "git",
