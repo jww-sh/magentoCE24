@@ -357,3 +357,52 @@ tasks:
         - blackfire
         - apcu
         - redis
+    variables:
+      env:
+        NVM_VERSION: master
+        NODE_VERSION: 26
+        #USE VARNISH
+        CONFIG__DEFAULT__SYSTEM__FULL_PAGE_CACHE__CACHING_APPLICATION: 2
+        # Parallel indexing
+        MAGE_INDEXER_THREADS_COUNT: 1
+        # Use Application Lock
+        MAGENTO_DC_INDEXER__USE_APPLICATION_LOCK: false
+        # Catalog Inventory Stock
+        MAGENTO_INDEXER_BATCH_SIZE__CATALOGINVENTORY_STOCK__SIMPLE: 200
+        # Category Product
+        MAGENTO_INDEXER_BATCH_SIZE__CATALOG_CATEGORY_PRODUCT: 666
+        # Catalog Search Fulltext
+        MAGENTO_INDEXER_BATCH_SIZE__CATALOGSEARCH_FULLTEXT__PARTIAL_REINDEX: 100
+        MAGENTO_INDEXER_BATCH_SIZE__CATALOGSEARCH_FULLTEXT__MYSQL_GET: 500
+        MAGENTO_INDEXER_BATCH_SIZE__CATALOGSEARCH_FULLTEXT__ELASTIC_SAVE: 500
+        # Catalog Product Price
+        MAGENTO_INDEXER_BATCH_SIZE__CATALOG_PRODUCT_PRICE__SIMPLE: 200
+        MAGENTO_INDEXER_BATCH_SIZE__CATALOG_PRODUCT_PRICE__DEFAULT: 500
+        MAGENTO_INDEXER_BATCH_SIZE__CATALOG_PRODUCT_PRICE__CONFIGURABLE: 666
+        # Catalog Permissions Category
+        MAGENTO_INDEXER_BATCH_SIZE__CATALOGPERMISSIONS_CATEGORY: 999
+        # Inventory
+        MAGENTO_INDEXER_BATCH_SIZE__INVENTORY__SIMPLE: 210
+        MAGENTO_INDEXER_BATCH_SIZE__INVENTORY__DEFAULT: 510
+        MAGENTO_INDEXER_BATCH_SIZE__INVENTORY__CONFIGURABLE: 616
+      php:
+        memory_limit: "1024M"
+    mounts:
+      "/var":
+        source: storage
+        source_path: "var"
+      "/var/log":
+        source: storage # can be instance but you may lose logs during autoscaling
+        source_path: "log"
+      "/app/etc":
+        source: storage
+        source_path: "etc"
+      "/pub/media":
+        source: storage
+        source_path: "media"
+      "/pub/static":
+        source: storage
+        source_path: "static"
+      "/var/report":
+        source: tmp
+        source_path: "report"
