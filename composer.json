@@ -112,6 +112,10 @@
         },
         {
             "type": "composer",
+            "url": "https://repo.magento.com/"
+        },
+        {
+            "type": "composer",
             "url": "https://mirror.mage-os.org/"
         },
         {
