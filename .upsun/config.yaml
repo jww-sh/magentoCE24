@@ -299,7 +299,7 @@ tasks:
       root: /
     type: php:8.5
     run:
-      command: "bin/magento indexer:reindex"
+      command: "php -d apc.enable_cli=1 bin/magento indexer:reindex"
       timeout: 3600
     relationships:
       database:
