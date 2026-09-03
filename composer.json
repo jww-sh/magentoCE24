@@ -19,8 +19,8 @@
     "require": {
         "magento/ece-tools": "*",
         "magento/composer": "*",
-        "magento/framework": "dev-2.4-develop as 103.0.9", 
-        "magento/product-community-edition": "*",
+        "magento/framework": "dev-2.4-develop as 103.0.9@dev",
+        "magento/product-community-edition": "dev-2.4-develop",
         "magento/magento-cloud-patches": "*",
         "magento/composer-root-update-plugin": "*",
         "magento/composer-dependency-version-audit-plugin": "*",
