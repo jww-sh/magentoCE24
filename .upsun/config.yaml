@@ -124,9 +124,9 @@ applications:
         #install php application
         composer --no-ansi --no-dev --no-interaction install --prefer-dist --optimize-autoloader
         #wget https://raw.githubusercontent.com/magento/magento2/refs/heads/2.4-develop/lib/internal/Magento/Framework/Lock/Backend/FileLock.php -O ./vendor/magento/framework/Lock/Backend/FileLock.php
-        php ./vendor/bin/ece-patches apply
         php ./vendor/bin/ece-tools run scenario/build/generate.xml
         php ./vendor/bin/ece-tools run scenario/build/transfer.xml
+        php ./vendor/bin/ece-patches apply
         #this is needed to ensure crons run 1 process at a time in the worker container
         sed -i 's/_process>1<\/use_/_process>0<\/use_/g' ${PLATFORM_APP_DIR}/vendor/magento/*/etc/cron_groups.xml
       deploy: |
