@@ -200,7 +200,7 @@ services:
     type: mariadb:12.3
     configuration:
       #properties:
-      #  optimizer_switch: "rowid_filter=off"
+      #  optimizer_switch: "rowid_filter=off" may not apply anymore https://experienceleague.adobe.com/en/docs/commerce-operations/upgrade-guide/prepare/prerequisites#mysql-84-changes:~:text=MariaDB%2010.4%20and%2010.6
       #  optimizer_use_condition_selectivity: 1
       #  query_cache_size: 0
       #  query_cache_type: 0
@@ -215,23 +215,23 @@ services:
       #    privileges:
       #      main: replication
 
-  #db-replica:
-  #  type: mariadb-replica:11.4
+  db-replica:
+    type: mariadb-replica:12.3
   #  configuration:
   #    properties:
-  #      optimizer_switch: "rowid_filter=off"
+  #      optimizer_switch: "rowid_filter=off" may not apply anymore  https://experienceleague.adobe.com/en/docs/commerce-operations/upgrade-guide/prepare/prerequisites#mysql-84-changes:~:text=MariaDB%2010.4%20and%2010.6
   #      optimizer_use_condition_selectivity: 1
   #      query_cache_size: 0
   #      query_cache_type: 0
-  #    schemas:
-  #      - main
-  #    endpoints:
-  #      main:
-  #        default_schema: main
-  #        privileges:
-  #          main: admin
-  #  relationships:
-  #    primary: db:replicator
+      schemas:
+        - main
+      endpoints:
+        main:
+          default_schema: main
+          privileges:
+            main: admin
+    relationships:
+      primary: db:replicator
 
 
   cache:
@@ -258,6 +258,7 @@ services:
     type: activemq-artemis:2
 
   varnish:
+    container_profile: BALANCED
     type: varnish:7.6
     relationships:
       application: 'app:http'
@@ -267,6 +268,7 @@ services:
         path: varnish.vcl
 
   networkstorage:
+    container_profile: BALANCED
     type: network-storage:1.0
 
 
