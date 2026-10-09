@@ -80,22 +80,26 @@ applications:
     # The 'mounts' describe writable, persistent filesystem mounts in the application.
     mounts:
       "/var":
-        source: storage
+        source: service
+        service: networkstorage
         source_path: "var"
       "/var/log":
-        source: storage # can be instance but you may lose logs during autoscaling
+        source: instance # can be instance (you may lose logs during autoscaling and have 8gb limit) or networkstorage (but may slow file system performance)
         source_path: "log"
       "/app/etc":
-        source: storage
+        source: service
+        service: networkstorage
         source_path: "etc"
       "/pub/media":
-        source: storage
+        source: service
+        service: networkstorage
         source_path: "media"
       "/pub/static":
-        source: storage
+        source: service
+        service: networkstorage
         source_path: "static"
       "/var/report":
-        source: tmp
+        source: tmp # can be tmp(lost during a host move or region upgrade) or instance (you may lose logs during autoscaling and have 8gb limit) or networkstorage (but may slow file system performance)
         source_path: "report"
     # The hooks executed at various points in the lifecycle of the application.
     hooks:
@@ -262,7 +266,8 @@ services:
         type: string
         path: varnish.vcl
 
-
+  networkstorage:
+    type: network-storage:1.0
 
 
 routes:
