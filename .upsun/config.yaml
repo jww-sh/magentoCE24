@@ -210,9 +210,9 @@ services:
           default_schema: main
           privileges:
             main: admin
-      #  replicator:
-      #    privileges:
-      #      main: replication
+        replicator:
+          privileges:
+            main: replication
 
   db-replica:
     type: mariadb-replica:12.3
