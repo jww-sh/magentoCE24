@@ -76,7 +76,6 @@ applications:
         endpoint: activemq-artemis
 
 
-
     # The 'mounts' describe writable, persistent filesystem mounts in the application.
     mounts:
       "/var":
@@ -217,7 +216,7 @@ services:
 
   db-replica:
     type: mariadb-replica:12.3
-  #  configuration:
+    configuration:
   #    properties:
   #      optimizer_switch: "rowid_filter=off" may not apply anymore  https://experienceleague.adobe.com/en/docs/commerce-operations/upgrade-guide/prepare/prerequisites#mysql-84-changes:~:text=MariaDB%2010.4%20and%2010.6
   #      optimizer_use_condition_selectivity: 1
@@ -232,7 +231,6 @@ services:
             main: admin
     relationships:
       primary: db:replicator
-
 
   cache:
     # https://docs.upsun.com/manage-resources/adjust-resources.html#adjust-a-container-profile
