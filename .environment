@@ -1,2 +1,2 @@
 # DG2  export MAGENTO_CLOUD_LOCKS_DIR=$PLATFORM_LOCKS_DIR #
-export MAGENTO_CLOUD_LOCKS_DIR=/run/lock/
+# for grid us DB locks
