@@ -290,11 +290,8 @@ tasks:
         curl -fsSL "https://github.com/grafana/k6/releases/download/${K6_VERSION}/k6-${K6_VERSION}-linux-amd64.tar.gz" \
           | tar -xz --strip-components=1 "k6-${K6_VERSION}-linux-amd64/k6"
         ./k6 version
-        # Task settings (URL from the primary route, profile, VUs, duration) are in
-        # testing/k6/.environment, which Upsun loads when the task container starts.
     run:
       command: |
-        set  | grep PLAT
         bash run-task.sh
       timeout: 7200
     mounts:
@@ -302,7 +299,13 @@ tasks:
         source: service
         service: networkstorage
         source_path: "var/k6-reports"
-
+    variables:
+      env:
+        URL: "https://www.yourshop.com"
+        PROFILE: combined
+        VUS: 25
+        ADMIN_VUS: 2
+        DURATION: 3m
 routes:
   https://{default}/:
     type: upstream
