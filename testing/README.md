@@ -25,22 +25,28 @@ Not ported: REST API pool, import/export, one-thread scenarios, Admin "Create Pr
 bundle/configurable variants (k6 creates a simple product), wishlist "send by email".
 
 ### Production-safety deviations
-Everything k6 creates is prefixed `k6_`. Admin flows only **modify** k6-owned data:
-edit product → hidden `k6_simple_N` (an admin product save clears every field the
-request omits, so catalog products are never re-saved), customer management →
-`k6_user_N@example.com`,
-edit order / returns → pending orders placed by `k6_*` emails (re-checked on the
-order page before invoicing/refunding). Created CMS pages, categories and cart
-rules are inactive; created products are "Not Visible Individually".
+Everything k6 creates is tagged **`k6mlt-`** (k6 Magento load test): emails
+`k6mlt-user-N@example.local` / `k6mlt-guest-…@example.local`, SKUs `k6mlt-simple-N`
+/ `k6mlt-product-…`, `k6mlt-cms-…`, `k6mlt-category-…`, `k6mlt-rule-…`, admin users
+`k6mlt-admin-N`. The tag contains no SQL `LIKE` wildcards (`_`, `%`), so cleanup
+searches can't match anything else, and every match is re-checked before deleting.
+`.local` addresses never resolve, so no mail leaves the store (`EMAIL_DOMAIN` to change).
+
+Admin flows only **modify** k6-owned data: edit product → hidden `k6mlt-simple-N`
+(an admin product save clears every field the request omits, so catalog products are
+never re-saved), customer management → `k6mlt-user-N`, edit order / returns →
+pending orders placed by `k6mlt-` emails (re-checked on the order page before
+invoicing/refunding). Created CMS pages, categories and cart rules are inactive;
+created products are "Not Visible Individually".
 
 ## One credential
 Only `ADMIN_USER` / `ADMIN_PASSWORD` are needed. `setup()` uses them to:
 - get a REST admin token (needs admin 2FA off for API tokens, set in `.upsun/config.yaml`)
-- create `CUSTOMER_COUNT` customers `k6_user_N@example.com` with an address
-- create `ADMIN_VUS` admin users `k6_admin_N` (Magento allows one session per admin
+- create `CUSTOMER_COUNT` customers `k6mlt-user-N@example.local` with an address
+- create `ADMIN_VUS` admin users `k6mlt-admin-N` (Magento allows one session per admin
   user, so each admin VU gets its own). Skip with `ADMIN_SHARE_ACCOUNT=1` if
   `admin/security/admin_account_sharing=1`.
-- create a few hidden `k6_simple_N` products for the edit-product flow
+- create a few hidden `k6mlt-simple-N` products for the edit-product flow
 
 All of it is idempotent and reused by later runs. The k6 users' password is derived
 from `ADMIN_PASSWORD`; if you change the admin password, run `PROFILE=cleanup` with
@@ -57,7 +63,7 @@ Without admin credentials only guest storefront/GraphQL flows run.
    the `lz4` PHP extension that `.magento.env.yaml` session compression needs (without
    it every session over 2 KB, i.e. every admin login, fails with a 500).
 2. Create the admin user k6 logs in with:
-   `upsun ssh -e main --app app -- php bin/magento admin:user:create --admin-user=k6 --admin-password='...' --admin-email=k6@example.com --admin-firstname=K6 --admin-lastname=Bench`
+   `upsun ssh -e main --app app -- php bin/magento admin:user:create --admin-user=k6 --admin-password='...' --admin-email=k6@example.local --admin-firstname=K6 --admin-lastname=Bench`
 3. Store the credentials as sensitive env vars (visible to the task):
    ```
    upsun variable:create -e main --level environment --name env:ADMIN_USER --value k6 --visible-build false
@@ -120,24 +126,27 @@ upsun task:run k6-docker -e main --variable env:PROFILE=smoke --wait
 | `DEBUG` | off | log failed checks |
 
 ## Cleanup
-Two steps remove every trace of a test run:
+Two steps remove every trace of a test run, in this order:
 
-1. `PROFILE=cleanup` (add `CLEANUP_CUSTOMERS=1 CLEANUP_ADMINS=1` to also remove the
-   reusable customers, `k6_simple_N` products and `k6_admin_N` users) cancels open
-   k6 orders and deletes k6 products, CMS pages, cart rules and categories via the
-   API. Run it locally or as the task.
-2. `cleanup-db.php` removes what the API can't, at the database level: k6 orders
-   with their invoices/shipments/credit memos and grid rows, MSI reservations,
-   the stock k6 shipments deducted (added back, nothing else touched), document
-   number sequences, guest carts from the load generators, k6 search terms,
-   orphaned customer token revocations / logs and visitors in the test window.
-   Dry run first, then `--apply`:
+1. **`PROFILE=cleanup`** (k6, REST + admin only; locally or as the task). Cancels open
+   k6 orders, returns the stock their shipments took through MSI (each order gets a
+   comment once done, so it never runs twice; `CLEANUP_STOCK_SKIP=sku,…` for SKUs
+   corrected by hand), deletes the k6 search terms (Marketing > Search Terms) and the
+   k6 products, CMS pages, cart rules and categories. `CLEANUP_CUSTOMERS=1
+   CLEANUP_ADMINS=1` also removes the reusable customers, `k6mlt-simple-N` products
+   and `k6mlt-admin-N` users.
+2. **`cleanup-orders.php`** in the app container, for what Open Source has no API for.
+   Uses Magento's own services only: the reservation cleanup job (before the orders
+   go), the sales repositories to delete k6 orders with their invoices, shipments and
+   credit memos (grid rows go with them), the cart repository for carts created in
+   the test window, the visitor cleanup job, then reindex, report statistics refresh
+   and full-page cache clean. Dry run first, then `--apply`:
    ```
-   upsun ssh -e main --app app -- "php -- --since='2026-10-12 00:00:00'" < testing/k6/cleanup-db.php
-   upsun ssh -e main --app app -- "php -- --since='2026-10-12 00:00:00' --apply" < testing/k6/cleanup-db.php
+   upsun ssh -e main --app app -- "php -- --since='2026-10-12 00:00:00'" < testing/k6/cleanup-orders.php
+   upsun ssh -e main --app app -- "php -- --since='2026-10-12 00:00:00' --apply" < testing/k6/cleanup-orders.php
    ```
-   Then Reports > Statistics > Refresh Lifetime Statistics.
+   `--prefix=k6_` cleans data from runs before the `k6mlt-` tag.
 
-Not covered by the scripts: the `ADMIN_USER`/`ADMIN_PASSWORD` environment
-variables, the k6 admin user itself, `/app/var/k6-reports` and `/app/var/k6`, and
-web/PHP access logs (rotated by the platform).
+Not covered: order/invoice number sequences (can't be rewound safely, so numbers
+continue after the gap), the `ADMIN_USER`/`ADMIN_PASSWORD` environment variables, the
+admin user itself, `/app/var/k6-reports` and `/app/var/k6`, and web/PHP access logs.
