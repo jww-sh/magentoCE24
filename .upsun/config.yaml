@@ -171,6 +171,13 @@ applications:
               passthru: "/media/apple-developer-merchantid-domain-association.txt"
             ^/loaderio-57b4d7c1bba248849fbf9600292c60b4.txt$:
               passthru: "/media/loaderio-57b4d7c1bba248849fbf9600292c60b4.txt"
+        # k6 load-test reports (var/k6-reports), listed and served by testing/k6/web/index.php
+        "/k6-reports":
+          root: "testing/k6/web"
+          passthru: "/k6-reports/index.php"
+          scripts: true
+          allow: false
+          expires: -1
         "/media":
           root: "pub/media"
           allow: true

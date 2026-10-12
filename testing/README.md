@@ -83,7 +83,11 @@ for a few dozen VUs; k6 warns when it is CPU-bound). Default timeout is 2h.
 
 Output is in the activity log, and `report.html` (k6 web dashboard; needs runs of
 more than ~30s), `summary.json` and `k6.log` are written to `/app/var/k6-reports/<timestamp>-<profile>/`
-(`latest` symlink) in the app container:
+(`latest` symlink) in the app container. They are browsable at
+**`https://<shop domain>/k6-reports/`**: `testing/k6/web/index.php` lists the runs and
+serves only those three files from that directory (no caching, `noindex`). It has no
+access control of its own, so put some in front of it. Reports contain no passwords:
+`setup()` only returns usernames/emails and VUs derive passwords themselves.
 ```
 upsun ssh -e main --app app -- ls var/k6-reports/latest
 upsun scp -e main --app app remote:var/k6-reports/latest/report.html .

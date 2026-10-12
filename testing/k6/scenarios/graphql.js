@@ -6,6 +6,7 @@ import { group } from 'k6';
 import { cfg, mix, taggedEmail } from '../lib/config.js';
 import { verify, think, pick, weighted, ordersPlaced } from '../lib/http.js';
 import { gql } from '../lib/data.js';
+import { derivedPassword } from '../lib/bootstrap.js';
 import { customerFor } from './storefront.js';
 
 function q(name, query, variables, token, expectPath) {
@@ -184,7 +185,7 @@ function customerToken(data) {
   const d = q(
     'GraphQL Generate Customer Token',
     `mutation($e:String!,$p:String!){ generateCustomerToken(email:$e, password:$p){ token } }`,
-    { e: customer.email, p: data.customerPassword },
+    { e: customer.email, p: derivedPassword() },
     null,
     'generateCustomerToken.token'
   );

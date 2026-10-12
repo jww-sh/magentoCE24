@@ -14,6 +14,11 @@ export function derivedPassword() {
   return `K6a!${crypto.sha256(`${cfg.adminPassword}:k6`, 'hex').slice(0, 20)}`;
 }
 
+// Password for an admin user from setup data (the main admin when accounts are shared).
+export function adminPasswordFor(username) {
+  return username === cfg.adminUser ? cfg.adminPassword : derivedPassword();
+}
+
 export function restToken() {
   const res = http.post(
     url('rest/V1/integration/admin/token'),
@@ -212,5 +217,7 @@ export function bootstrap(regionId, needAdminUsers) {
       ? [{ username: cfg.adminUser, password: cfg.adminPassword }]
       : ensureAdminUsers(password);
   }
-  return { customers, customerPassword: password, adminUsers, k6Products: products };
+  // No passwords in the returned data: k6 writes setup data into summary.json.
+  // VUs derive them again with derivedPassword() / adminPasswordFor().
+  return { customers, adminUsers: adminUsers.map((u) => ({ username: u.username })), k6Products: products };
 }

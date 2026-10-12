@@ -13,6 +13,7 @@ import exec from 'k6/execution';
 import { group } from 'k6';
 import { cfg, mix, PREFIX } from '../lib/config.js';
 import { AdminClient } from '../lib/admin.js';
+import { adminPasswordFor } from '../lib/bootstrap.js';
 import { think, pick, weighted, match, uniq } from '../lib/http.js';
 
 let client = null;
@@ -20,7 +21,7 @@ let client = null;
 function adminFor(data) {
   if (!client) {
     const u = data.adminUsers[(exec.vu.idInTest - 1) % data.adminUsers.length];
-    client = new AdminClient(u.username, u.password);
+    client = new AdminClient(u.username, adminPasswordFor(u.username));
   }
   return client;
 }

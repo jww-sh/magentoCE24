@@ -5,6 +5,7 @@ import exec from 'k6/execution';
 import { group } from 'k6';
 import { cfg, mix } from '../lib/config.js';
 import { get, post, think, pick, pickDistinct, weighted, match, initFormKey, AJAX } from '../lib/http.js';
+import { derivedPassword } from '../lib/bootstrap.js';
 
 const IN_STOCK = '<span>In stock</span>';
 
@@ -75,7 +76,7 @@ export function customerLogin(data) {
   get('customer/account/login/', 'Customer Login Page', { expect: ['<title>Customer Login</title>'] });
   const res = post(
     'customer/account/loginPost/',
-    { form_key: fk, 'login[username]': customer.email, 'login[password]': data.customerPassword, send: '' },
+    { form_key: fk, 'login[username]': customer.email, 'login[password]': derivedPassword(), send: '' },
     'Customer Login',
     { expect: ['<title>My Account</title>'] }
   );

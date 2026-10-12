@@ -120,7 +120,7 @@ export function setup() {
   console.log(
     `Catalog: ${catalog.categories.length} categories, ${catalog.simples.length} simple, ${catalog.configurables.length} configurable products`
   );
-  let boot = { customers: [], customerPassword: null, adminUsers: [], k6Products: [] };
+  let boot = { customers: [], adminUsers: [], k6Products: [] };
   if (hasAdmin()) {
     const wantAdminUsers = cfg.profile !== 'storefront' && cfg.adminVus > 0;
     boot = bootstrap(catalog.regionId, wantAdminUsers);
