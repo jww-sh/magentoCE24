@@ -20,6 +20,8 @@ import * as gq from './scenarios/graphql.js';
 import { adminFlow, ADMIN_FLOWS } from './scenarios/admin.js';
 import { crawl } from './scenarios/crawler.js';
 import { cleanup } from './scenarios/cleanup.js';
+import { varnishChecks } from './scenarios/varnish.js';
+import { runIteration } from './lib/failures.js';
 
 const WEB_FLOWS = {
   browse: web.browse,
@@ -73,13 +75,16 @@ function once(exec) {
   return { executor: 'per-vu-iterations', exec, vus: 1, iterations: 1, maxDuration: '30m' };
 }
 
+// Varnish cache checks run once alongside every load profile (and inside smoke)
+const varnishScenario = { varnish: once('varnish') };
+
 function scenarios() {
   const withAdmin = hasAdmin() && cfg.adminVus > 0;
   switch (cfg.profile) {
     case 'graphql':
-      return Object.assign({ storefront: storefrontScenario('graphqlMix') }, withAdmin ? { admin: adminScenario() } : {});
+      return Object.assign({ storefront: storefrontScenario('graphqlMix') }, varnishScenario, withAdmin ? { admin: adminScenario() } : {});
     case 'storefront':
-      return { storefront: storefrontScenario('storefrontMix') };
+      return Object.assign({ storefront: storefrontScenario('storefrontMix') }, varnishScenario);
     case 'admin':
       return { admin: adminScenario() };
     case 'crawler':
@@ -89,11 +94,14 @@ function scenarios() {
     case 'cleanup':
       return { cleanup: once('cleanupRun') };
     default:
-      return Object.assign({ storefront: storefrontScenario('storefrontMix') }, withAdmin ? { admin: adminScenario() } : {});
+      return Object.assign({ storefront: storefrontScenario('storefrontMix') }, varnishScenario, withAdmin ? { admin: adminScenario() } : {});
   }
 }
 
 const quiet = ['cleanup'].includes(cfg.profile);
+const runsVarnishChecks =
+  ['combined', 'graphql', 'storefront'].includes(cfg.profile) ||
+  (cfg.profile === 'smoke' && cfg.smokeGroups.includes('varnish'));
 
 export const options = {
   scenarios: scenarios(),
@@ -107,6 +115,8 @@ export const options = {
         http_req_failed: ['rate<0.05'],
         magento_errors: ['rate<0.05'],
         magento_page_duration: ['p(95)<5000'],
+        // every cache behaviour check must pass, however many other requests the run makes
+        ...(runsVarnishChecks ? { 'checks{suite:varnish}': ['rate==1'] } : {}),
       },
 };
 
@@ -139,19 +149,26 @@ function storefrontWeights(data) {
 }
 
 export function storefrontMix(data) {
-  WEB_FLOWS[weighted(storefrontWeights(data))](data);
+  const key = weighted(storefrontWeights(data));
+  runIteration(`web ${key}`, () => WEB_FLOWS[key](data));
 }
 
 export function graphqlMix(data) {
-  GRAPHQL_FLOWS[weighted(storefrontWeights(data))](data);
+  const key = weighted(storefrontWeights(data));
+  runIteration(`graphql ${key}`, () => GRAPHQL_FLOWS[key](data));
 }
 
 export function adminMix(data) {
-  adminFlow(data);
+  const key = weighted(mix.admin);
+  runIteration(`admin ${key}`, () => adminFlow(data, key));
 }
 
 export function crawler(data) {
-  crawl(data);
+  runIteration('crawler', () => crawl(data));
+}
+
+export function varnish(data) {
+  runIteration('varnish', () => varnishChecks(data));
 }
 
 export function cleanupRun() {
@@ -164,28 +181,30 @@ export function cleanupRun() {
 export function smoke(data) {
   const hasCustomers = data.customers && data.customers.length > 0;
   const run = (group) => cfg.smokeGroups.includes(group);
+  // each flow is its own runIteration, so one failing flow doesn't abort the rest
+  if (run('varnish')) runIteration('varnish', () => varnishChecks(data));
   for (const key of run('web') ? Object.keys(WEB_FLOWS) : []) {
     if (CUSTOMER_FLOWS.includes(key) && !hasCustomers) continue;
     http.cookieJar().clear(cfg.baseUrl);
-    if (key === 'search') ['quick', 'quick_filter', 'advanced'].forEach((k) => web.search(data, k));
-    else WEB_FLOWS[key](data);
+    if (key === 'search') ['quick', 'quick_filter', 'advanced'].forEach((k) => runIteration(`web search ${k}`, () => web.search(data, k)));
+    else runIteration(`web ${key}`, () => WEB_FLOWS[key](data));
   }
   for (const key of run('graphql') ? Object.keys(GRAPHQL_FLOWS) : []) {
     if (CUSTOMER_FLOWS.includes(key) && !hasCustomers) continue;
-    if (key === 'search') ['quick', 'quick_filter'].forEach((k) => gq.gqlSearch(data, k));
-    else GRAPHQL_FLOWS[key](data);
+    if (key === 'search') ['quick', 'quick_filter'].forEach((k) => runIteration(`graphql search ${k}`, () => gq.gqlSearch(data, k)));
+    else runIteration(`graphql ${key}`, () => GRAPHQL_FLOWS[key](data));
   }
   if (run('admin') && data.adminUsers && data.adminUsers.length) {
     for (const key of Object.keys(ADMIN_FLOWS)) {
       http.cookieJar().clear(cfg.baseUrl);
-      adminFlow(data, key);
+      runIteration(`admin ${key}`, () => adminFlow(data, key));
     }
   }
 }
 
 // Used when the script is run with plain --vus/--duration flags.
 export default function (data) {
-  if (cfg.profile === 'crawler') crawl(data);
+  if (cfg.profile === 'crawler') crawler(data);
   else if (cfg.profile === 'graphql') graphqlMix(data);
   else storefrontMix(data);
 }

@@ -69,8 +69,11 @@ export const cfg = {
   shippingCarrier: str('SHIPPING_CARRIER', 'flatrate'),
   shippingMethod: str('SHIPPING_METHOD', 'flatrate'),
 
-  // PROFILE=smoke: which flow groups to run (web, graphql, admin)
-  smokeGroups: str('SMOKE_GROUPS', 'web,graphql,admin').split(',').map((g) => g.trim()),
+  // PROFILE=smoke: which flow groups to run (web, graphql, admin, varnish)
+  smokeGroups: str('SMOKE_GROUPS', 'web,graphql,admin,varnish').split(',').map((g) => g.trim()),
+
+  // Max failure records (full request/response) each VU writes to the report
+  failureLogLimit: num('FAILURE_LOG_LIMIT', 50),
 
   // Crawler profile (original magento.js)
   maxDepth: num('MAX_DEPTH', 5),

@@ -277,8 +277,9 @@ sub vcl_recv {
         }
     }
 
-    # Don't cache the authenticated GraphQL or requests
-    if (req.url ~ "/graphql" && req.http.Authorization ~ "^Bearer") {
+    # Don't cache authenticated GraphQL requests without X-Magento-Cache-Id. With it (Magento 2.4.7+),
+    # customer GraphQL responses are cached per cache id, plus an "Authorized" marker (vcl_hash).
+    if (req.url ~ "/graphql" && !req.http.X-Magento-Cache-Id && req.http.Authorization ~ "^Bearer") {
         return (pass);
     }
 
@@ -292,8 +293,12 @@ sub vcl_recv {
 }
 
 sub vcl_hash {
-    if (req.url !~ "/graphql" && cookie.isset("X-Magento-Vary=")) {
-        hash_data(cookie.get("X-Magento-Vary"));
+    # Vary on Magento's X-Magento-Vary cookie (customer group, store, currency). GraphQL
+    # requests carrying X-Magento-Cache-Id are keyed on that instead (see process_graphql_headers).
+    # Read from the Cookie header rather than the cookie vmod: vcl_recv removes the header for
+    # /media and /static, so those stay shared across variants.
+    if ((req.url !~ "/graphql" || !req.http.X-Magento-Cache-Id) && req.http.Cookie ~ "X-Magento-Vary=") {
+        hash_data(regsub(req.http.Cookie, "^.*?X-Magento-Vary=([^;]+);*.*$", "\1"));
     }
 
     # To make sure http users don't see ssl warning
@@ -352,10 +357,10 @@ sub vcl_backend_response {
         set beresp.http.XKey = "all";
     }
 
-    # Cache HTTP 200 responses
+    # Cache HTTP 200 and 404 responses, unless Magento marks them private (customer-specific)
     # TODO MAKE CONFIGURABLE whether or not 404's should be cached
-    if (beresp.status != 200 && beresp.status != 404) {
-    #if (beresp.status != 200) {
+    if ((beresp.status != 200 && beresp.status != 404) || beresp.http.Cache-Control ~ "private") {
+    #if (beresp.status != 200 || beresp.http.Cache-Control ~ "private") {
         set beresp.ttl = 120s;
         set beresp.uncacheable = true;
         return (deliver);

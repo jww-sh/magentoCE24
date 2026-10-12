@@ -180,7 +180,7 @@ function checkoutCart(cartId, data, token, email) {
 // Tokens are left to expire rather than revoked: revokeCustomerToken invalidates
 // every token of that customer issued up to the same second, which breaks the
 // next flow that logs in as the same customer.
-function customerToken(data) {
+export function customerToken(data) {
   const customer = customerFor(data);
   const d = q(
     'GraphQL Generate Customer Token',

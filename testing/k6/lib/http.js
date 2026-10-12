@@ -4,6 +4,7 @@ import exec from 'k6/execution';
 import { check, sleep } from 'k6';
 import { Trend, Rate, Counter } from 'k6/metrics';
 import { cfg } from './config.js';
+import { recordFailure } from './failures.js';
 
 export const pageDuration = new Trend('magento_page_duration', true);
 export const errorRate = new Rate('magento_errors');
@@ -64,8 +65,16 @@ export function verify(res, name, expect, okStatus) {
   }
   const ok = check(res, checks);
   errorRate.add(!ok);
-  if (!ok && cfg.debug) {
-    console.warn(`[VU ${exec.vu.idInTest}] ${name} failed: ${res.status} ${res.url}`);
+  if (!ok) {
+    const failed = Object.keys(checks).filter((label) => {
+      try {
+        return !checks[label](res);
+      } catch (e) {
+        return true;
+      }
+    });
+    recordFailure(res, name, failed);
+    if (cfg.debug) console.warn(`[VU ${exec.vu.idInTest}] ${name} failed: ${res.status} ${res.url}`);
   }
   return ok;
 }
