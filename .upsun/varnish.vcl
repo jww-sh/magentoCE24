@@ -371,6 +371,18 @@ sub vcl_backend_response {
     # Remove the Set-Cookie header for cacheable content
     # Only for HTTP GET & HTTP HEAD requests
     if (beresp.ttl > 0s && (bereq.method == "GET" || bereq.method == "HEAD")) {
+        # Merge multiple Set-Cookie headers so the X-Magento-Vary check sees all of them.
+        # Merged cookies can't be sent to a browser, which is fine: the header is removed below.
+        std.collect(beresp.http.Set-Cookie);
+        # Don't cache a response that sets X-Magento-Vary under the key of a request that
+        # didn't send it (Magento reference VCL): it is a variant (customer group, store,
+        # currency) and would be served to every visitor without the cookie.
+        if ((bereq.url !~ "/graphql" || !bereq.http.X-Magento-Cache-Id)
+         && bereq.http.Cookie !~ "X-Magento-Vary="
+         && beresp.http.Set-Cookie ~ "X-Magento-Vary=") {
+            set beresp.ttl = 0s;
+            set beresp.uncacheable = true;
+        }
         unset beresp.http.Set-Cookie;
     }
 }
