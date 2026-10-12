@@ -4,7 +4,7 @@
 import exec from 'k6/execution';
 import { group } from 'k6';
 import { cfg, mix } from '../lib/config.js';
-import { get, post, think, pick, weighted, match, initFormKey, AJAX } from '../lib/http.js';
+import { get, post, think, pick, pickDistinct, weighted, match, initFormKey, AJAX } from '../lib/http.js';
 
 const IN_STOCK = '<span>In stock</span>';
 
@@ -204,9 +204,11 @@ export function compare(data) {
     const fk = initFormKey();
     category(data);
     think();
+    // distinct products, otherwise a repeat add leaves the compare count unchanged
+    const [first, second] = pickDistinct(data.simples, 2);
     const products = [
-      [pick(data.simples), 'Simple'],
-      [pick(data.simples), 'Simple'],
+      [first, 'Simple'],
+      [second, 'Simple'],
       [pick(data.configurables), 'Configurable'],
     ];
     products.forEach(([p, kind], i) => {

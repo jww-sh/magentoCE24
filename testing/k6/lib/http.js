@@ -111,6 +111,13 @@ export function pick(list) {
   return list[Math.floor(Math.random() * list.length)];
 }
 
+export function pickDistinct(list, n) {
+  const copy = list.slice();
+  const out = [];
+  while (out.length < n && copy.length) out.push(copy.splice(Math.floor(Math.random() * copy.length), 1)[0]);
+  return out;
+}
+
 // Pick a key from a { key: weight } map.
 export function weighted(weights) {
   const entries = Object.entries(weights).filter(([, w]) => w > 0);
