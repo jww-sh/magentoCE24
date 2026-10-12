@@ -1,5 +1,5 @@
-# Loaded by Upsun when the k6 task container starts (evaluated then, not at build time).
-# Values passed with `upsun task:run k6 --variable env:NAME=value` take precedence.
+# Loaded by Upsun when the loadtesting-k6 task container starts (evaluated then, not at build time).
+# Values passed with `upsun task:run loadtesting-k6 --variable env:NAME=value` take precedence.
 
 # URL: the environment's primary route (https://{default}/). node rather than jq: node is
 # always there in the nodejs task image.

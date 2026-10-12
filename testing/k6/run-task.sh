@@ -1,5 +1,5 @@
 #!/bin/sh
-# Entrypoint for the Upsun k6 task (also works locally: REPORT_ROOT=./reports sh run-task.sh).
+# Entrypoint for the Upsun loadtesting-k6 task (also works locally: REPORT_ROOT=./reports sh run-task.sh).
 # Writes report.html (k6 web dashboard export), summary.json, k6.log, console.log,
 # failures.jsonl (full request/response of every failed check) and run-info.json into
 # $REPORT_ROOT/<timestamp>-<profile>/, which on Upsun is the shared network

@@ -1,6 +1,6 @@
 // Runtime configuration, read once from __ENV.
 // Every value can be passed with `k6 run -e NAME=value` or, on Upsun, with
-// `upsun task:run k6 --variable env:NAME=value`.
+// `upsun task:run loadtesting-k6 --variable env:NAME=value`.
 
 function str(name, fallback) {
   const v = __ENV[name];
@@ -19,7 +19,7 @@ function bool(name, fallback) {
 }
 
 export const cfg = {
-  // On Upsun the k6 task gets URL from the primary route (see .upsun/config.yaml)
+  // On Upsun the loadtesting-k6 task gets URL from the primary route (see .upsun/config.yaml)
   baseUrl: str('URL', '').replace(/\/$/, ''),
   profile: str('PROFILE', 'combined'),
   debug: bool('DEBUG', false),

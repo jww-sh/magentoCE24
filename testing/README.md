@@ -73,12 +73,12 @@ Without admin credentials only guest storefront/GraphQL flows run.
 
 ## Running on Upsun
 ```
-upsun task:run k6 -e main --variable env:PROFILE=smoke --wait                      # functional check
-upsun task:run k6 -e main --variable env:VUS=30 --variable env:DURATION=15m --wait # combined load
-upsun task:run k6 -e main --variable env:PROFILE=graphql --variable env:VUS=30 --wait
-upsun task:run k6 -e main --variable env:PROFILE=cleanup --wait
+upsun task:run loadtesting-k6 -e main --variable env:PROFILE=smoke --wait                      # functional check
+upsun task:run loadtesting-k6 -e main --variable env:VUS=30 --variable env:DURATION=15m --wait # combined load
+upsun task:run loadtesting-k6 -e main --variable env:PROFILE=graphql --variable env:VUS=30 --wait
+upsun task:run loadtesting-k6 -e main --variable env:PROFILE=cleanup --wait
 ```
-Size the task container with `upsun resources:set --size k6:<size>` (1 CPU is fine
+Size the task container with `upsun resources:set --size loadtesting-k6:<size>` (1 CPU is fine
 for a few dozen VUs; k6 warns when it is CPU-bound). Default timeout is 2h.
 
 Output is in the activity log, and `report.html` (k6 web dashboard; needs runs of
