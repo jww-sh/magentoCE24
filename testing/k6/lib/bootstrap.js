@@ -1,0 +1,216 @@
+// setup()-time bootstrap: from the one ADMIN_USER/ADMIN_PASSWORD pair, make sure
+// the test customers, admin users and k6-owned products exist. Idempotent, so
+// every run reuses what previous runs created.
+import http from 'k6/http';
+import crypto from 'k6/crypto';
+import { cfg, PREFIX } from './config.js';
+import { baseHeaders, url, qs, match } from './http.js';
+import { AdminClient } from './admin.js';
+
+// Deterministic password for everything k6 creates, derived from the admin
+// password so no second secret is needed. Satisfies Magento's customer (3 char
+// classes, 8+) and admin (letters + digits, 7+) password rules.
+export function derivedPassword() {
+  return `K6a!${crypto.sha256(`${cfg.adminPassword}:k6`, 'hex').slice(0, 20)}`;
+}
+
+export function restToken() {
+  const res = http.post(
+    url('rest/V1/integration/admin/token'),
+    JSON.stringify({ username: cfg.adminUser, password: cfg.adminPassword }),
+    {
+      // Magento REST picks XML for a browser Accept header, so ask for JSON explicitly
+      headers: Object.assign(baseHeaders(), { 'Content-Type': 'application/json', Accept: 'application/json' }),
+      tags: { name: 'SetUp - Admin Token' },
+    }
+  );
+  if (res.status !== 200) {
+    throw new Error(
+      `Admin REST token failed (${res.status}): ${res.body}. Is twofactorauth/general/enable_for_api_token_generation=0?`
+    );
+  }
+  return res.json();
+}
+
+export function rest(token, method, path, payload, name) {
+  const res = http.request(method, url(`rest/default/V1/${path}`), payload ? JSON.stringify(payload) : null, {
+    headers: Object.assign(baseHeaders(), {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+    }),
+    tags: { name: name || `REST ${method} ${path.split('/')[0]}` },
+  });
+  let body = null;
+  try {
+    body = res.json();
+  } catch (e) {
+    body = null;
+  }
+  return { res, body };
+}
+
+export function searchCriteria(field, value, condition, pageSize) {
+  return qs({
+    'searchCriteria[filterGroups][0][filters][0][field]': field,
+    'searchCriteria[filterGroups][0][filters][0][value]': value,
+    'searchCriteria[filterGroups][0][filters][0][conditionType]': condition || 'like',
+    'searchCriteria[pageSize]': pageSize || 500,
+  });
+}
+
+function ensureCustomers(token, password, regionId) {
+  const found = rest(token, 'GET', `customers/search?${searchCriteria('email', `${PREFIX}user_%@example.com`)}`);
+  const existing = {};
+  for (const c of (found.body && found.body.items) || []) existing[c.email] = c.id;
+
+  const customers = [];
+  let created = 0;
+  for (let i = 1; i <= cfg.customerCount; i++) {
+    const email = `${PREFIX}user_${i}@example.com`;
+    if (existing[email]) {
+      customers.push({ email, id: existing[email] });
+      continue;
+    }
+    const a = cfg.address;
+    const address = {
+      firstname: 'K6',
+      lastname: `User${i}`,
+      street: [a.street],
+      city: a.city,
+      postcode: a.postcode,
+      telephone: a.telephone,
+      country_id: a.countryId,
+      default_billing: true,
+      default_shipping: true,
+    };
+    if (regionId) address.region_id = regionId;
+    const r = rest(
+      token,
+      'POST',
+      'customers',
+      {
+        customer: { email, firstname: 'K6', lastname: `User${i}`, website_id: 1, group_id: 1, addresses: [address] },
+        password,
+      },
+      'SetUp - Create Customer'
+    );
+    if (r.res.status === 200 && r.body) {
+      customers.push({ email, id: r.body.id });
+      created++;
+    } else {
+      console.error(`Could not create ${email}: ${r.res.status} ${r.res.body}`);
+    }
+  }
+  console.log(`Customers: ${customers.length} available (${created} created)`);
+  return customers;
+}
+
+// Products that admin "edit product" flows are allowed to modify. Not visible
+// on the storefront (visibility 1) so shoppers never see them.
+function ensureProducts(token, count) {
+  const found = rest(token, 'GET', `products?${searchCriteria('sku', `${PREFIX}simple_%`)}`);
+  const existing = {};
+  for (const p of (found.body && found.body.items) || []) existing[p.sku] = p.id;
+
+  const products = [];
+  for (let i = 1; i <= count; i++) {
+    const sku = `${PREFIX}simple_${i}`;
+    if (existing[sku]) {
+      products.push({ sku, id: existing[sku] });
+      continue;
+    }
+    const r = rest(
+      token,
+      'POST',
+      'products',
+      {
+        product: {
+          sku,
+          name: sku,
+          attribute_set_id: 4,
+          price: 10,
+          status: 1,
+          visibility: 1,
+          type_id: 'simple',
+          weight: 1,
+          extension_attributes: { website_ids: [1], stock_item: { qty: 100000, is_in_stock: true } },
+          custom_attributes: [{ attribute_code: 'url_key', value: sku.replace(/_/g, '-') }],
+        },
+      },
+      'SetUp - Create Product'
+    );
+    if (r.res.status === 200 && r.body) products.push({ sku, id: r.body.id });
+    else console.error(`Could not create product ${sku}: ${r.res.status} ${r.res.body}`);
+  }
+  return products;
+}
+
+// Magento allows one session per admin user (admin_account_sharing=0), so each
+// admin VU gets its own k6_admin_N user, created through the admin UI (there is
+// no REST endpoint for admin users).
+function ensureAdminUsers(password) {
+  const count = Math.max(1, cfg.adminVus);
+  const users = [];
+  for (let i = 1; i <= count; i++) users.push({ username: `${PREFIX}admin_${i}`, password });
+
+  const admin = new AdminClient(cfg.adminUser, cfg.adminPassword);
+  if (!admin.login()) throw new Error('Main admin login failed; check ADMIN_USER/ADMIN_PASSWORD and that admin 2FA is disabled');
+  if (!admin.hasKey('admin/user/index')) {
+    throw new Error(`${cfg.adminUser} cannot see System > Permissions > All Users; it needs the Administrators role`);
+  }
+  const list = admin.get('admin/user/index', 'SetUp - Admin Users', { params: 'limit/200/' });
+  const existing = new Set((list.body || '').match(new RegExp(`${PREFIX}admin_\\d+`, 'g')) || []);
+
+  let created = 0;
+  for (const u of users) {
+    if (existing.has(u.username)) continue;
+    admin.get('admin/user/new', 'SetUp - New Admin User');
+    // Never send user_id for a new user: Magento treats '' as an existing id,
+    // runs an UPDATE instead of an INSERT and then clears roles for user_id 0,
+    // which deletes the Administrators group role.
+    const res = admin.post(
+      'admin/user/save',
+      {
+        username: u.username,
+        firstname: 'K6',
+        lastname: u.username,
+        email: `${u.username}@example.com`,
+        password: u.password,
+        password_confirmation: u.password,
+        interface_locale: 'en_US',
+        is_active: '1',
+        current_password: cfg.adminPassword,
+        'roles[]': cfg.adminRoleId,
+      },
+      'SetUp - Save Admin User',
+      { expect: ['You saved the user.'] }
+    );
+    if (!(res.body || '').includes('You saved the user.')) {
+      console.error(`Could not create admin ${u.username}: ${match(res.body, /messages-message-error"[^>]*>\s*([^<]+)/)}`);
+    }
+  }
+  // Trust the user grid, not the success message
+  const after = admin.get('admin/user/index', 'SetUp - Admin Users', { params: 'limit/200/' });
+  const present = new Set((after.body || '').match(new RegExp(`${PREFIX}admin_\\d+`, 'g')) || []);
+  admin.logout();
+  const missing = users.filter((u) => !present.has(u.username)).map((u) => u.username);
+  if (missing.length) throw new Error(`Admin users missing after save: ${missing.join(', ')}`);
+  created = users.length - existing.size;
+  console.log(`Admin users: ${users.length} (${created} created)`);
+  return users;
+}
+
+export function bootstrap(regionId, needAdminUsers) {
+  const token = restToken();
+  const password = derivedPassword();
+  const customers = ensureCustomers(token, password, regionId);
+  const products = ensureProducts(token, Math.max(5, cfg.adminVus * 2));
+  let adminUsers = [];
+  if (needAdminUsers) {
+    adminUsers = cfg.adminShareAccount
+      ? [{ username: cfg.adminUser, password: cfg.adminPassword }]
+      : ensureAdminUsers(password);
+  }
+  return { customers, customerPassword: password, adminUsers, k6Products: products };
+}
