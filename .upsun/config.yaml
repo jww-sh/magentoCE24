@@ -299,9 +299,9 @@ tasks:
       env:
         URL: https://shop.izinga.za.net
         PROFILE: combined
-        VUS: 10
-        ADMIN_VUS: 1
-        DURATION: 10m
+        VUS: 25
+        ADMIN_VUS: 2
+        DURATION: 3m
 
 routes:
   https://{default}/:
