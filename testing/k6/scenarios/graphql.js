@@ -3,7 +3,7 @@
 import exec from 'k6/execution';
 import encoding from 'k6/encoding';
 import { group } from 'k6';
-import { cfg, mix, PREFIX } from '../lib/config.js';
+import { cfg, mix, taggedEmail } from '../lib/config.js';
 import { verify, think, pick, weighted, ordersPlaced } from '../lib/http.js';
 import { gql } from '../lib/data.js';
 import { customerFor } from './storefront.js';
@@ -266,7 +266,7 @@ export function gqlGuestCheckout(data) {
     const cartId = createCart(null);
     if (!cartId) return;
     addToCart(cartId, data, null, 2, 2);
-    const email = `${PREFIX}guest_${exec.vu.idInTest}_${exec.vu.iterationInScenario}_${Date.now()}@example.com`;
+    const email = taggedEmail('guest', exec.vu.idInTest, exec.vu.iterationInScenario, Date.now());
     checkoutCart(cartId, data, null, email);
   });
 }

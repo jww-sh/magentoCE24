@@ -2,7 +2,7 @@
 // checkout via carts/mine REST (session-authenticated, like the Luma checkout JS).
 import exec from 'k6/execution';
 import { group } from 'k6';
-import { cfg, PREFIX } from '../lib/config.js';
+import { cfg, taggedEmail } from '../lib/config.js';
 import { get, postJson, think, match, initFormKey, ordersPlaced } from '../lib/http.js';
 import { home, category, addProductsToCart, customerLogin, customerLogout } from './storefront.js';
 
@@ -42,7 +42,7 @@ export function guestCheckout(data) {
     const start = get('checkout/', 'Checkout Start', { noBust: true, expect: ['<title>Checkout</title>'] });
     const cartId = match(start.body, /"quoteData":\{"entity_id":"([^"]+)"/);
     if (!cartId) return;
-    const email = `${PREFIX}guest_${exec.vu.idInTest}_${exec.vu.iterationInScenario}_${Date.now()}@example.com`;
+    const email = taggedEmail('guest', exec.vu.idInTest, exec.vu.iterationInScenario, Date.now());
     think();
 
     postJson('rest/default/V1/customers/isEmailAvailable', { customerEmail: email }, 'Checkout Email Available', {

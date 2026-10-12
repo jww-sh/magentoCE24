@@ -162,5 +162,5 @@ export function json(res) {
 }
 
 export function uniq(label) {
-  return `${label}${Date.now()}_${exec.vu.idInTest}_${Math.floor(Math.random() * 1e6)}`;
+  return `${label}${Date.now()}-${exec.vu.idInTest}-${Math.floor(Math.random() * 1e6)}`;
 }

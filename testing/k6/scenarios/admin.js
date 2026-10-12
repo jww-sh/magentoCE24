@@ -1,10 +1,10 @@
 // Admin flows from the JMX "Combined Benchmark Pool" [C] Admin * controllers.
 //
 // Production-safety deviations from the JMX:
-//  - edit product only touches hidden k6_simple_N products
-//  - customer management only touches k6_ customers
-//  - edit order / returns only touch pending orders placed by k6_ emails
-//  - created products, CMS pages, categories and cart rules are k6_-named and
+//  - edit product only touches hidden k6mlt-simple-N products
+//  - customer management only touches k6mlt- customers
+//  - edit order / returns only touch pending orders placed by k6mlt- emails
+//  - created products, CMS pages, categories and cart rules are k6mlt-named and
 //    created inactive / not visible, so shoppers never see them
 // Secret URL keys are harvested from pages (see lib/admin.js); because a key
 // only depends on route/controller/action, a key taken from any grid row's
@@ -53,7 +53,7 @@ function k6PendingOrders(admin) {
     },
     'Admin Search Pending Orders'
   );
-  return ((json && json.items) || []).filter((o) => String(o.customer_email || '').startsWith(PREFIX));
+  return ((json && json.items) || []).filter((o) => String(o.customer_email || '').startsWith(`${PREFIX}-`));
 }
 
 function orderItemIds(body) {
@@ -101,7 +101,7 @@ function openK6Order(admin) {
     expect: [`#${order.increment_id}`],
   });
   // never mutate an order that isn't ours
-  return (view.body || '').includes(PREFIX) ? order.entity_id : null;
+  return (view.body || '').includes(`${PREFIX}-`) ? order.entity_id : null;
 }
 
 function cms(admin) {
@@ -109,13 +109,13 @@ function cms(admin) {
   think();
   admin.get('cms/page/new', 'Admin CMS Create New');
   think();
-  const id = uniq(PREFIX + 'cms_');
+  const id = uniq(`${PREFIX}-cms-`);
   admin.post(
     'cms/page/save',
     {
       content: `<p>CMS Content ${id}</p>`,
       content_heading: '',
-      identifier: id.replace(/_/g, '-'),
+      identifier: id,
       is_active: '0',
       layout_update_xml: '',
       meta_description: '',
@@ -191,7 +191,7 @@ function productFields(name, sku, price, extra) {
       'product[status]': '1',
       'product[visibility]': '1',
       'product[website_ids][]': '1',
-      'product[url_key]': sku.replace(/_/g, '-'),
+      'product[url_key]': sku,
       'product[description]': `<p>${name} description</p>`,
       'product[stock_data][use_config_manage_stock]': '1',
       'product[stock_data][qty]': '1000',
@@ -208,7 +208,7 @@ function createProduct(admin) {
   think();
   admin.get('catalog/product/new', 'Admin New Simple Product', { params: 'set/4/type/simple/', expect: ['New Product'] });
   think();
-  const sku = uniq(`${PREFIX}product_`);
+  const sku = uniq(`${PREFIX}-product-`);
   const fields = productFields(sku, sku, 42);
   admin.post('catalog/product/validate', fields, 'Admin New Product Validate', {
     params: 'set/4/',
@@ -221,7 +221,7 @@ function createProduct(admin) {
   });
 }
 
-// Only k6_simple_N products: an admin product save treats every field missing
+// Only k6mlt-simple-N products: an admin product save treats every field missing
 // from the request as cleared (categories, stock) and a simple product without
 // product_has_weight is converted to virtual, so sample catalog products can't
 // be "re-saved unchanged" without replaying their whole form.
@@ -373,7 +373,7 @@ function categoryManagement(admin, data) {
     expect: ['New Category'],
   });
   think();
-  const name = uniq(`${PREFIX}category_`);
+  const name = uniq(`${PREFIX}-category-`);
   const products = {};
   for (let i = 0; i < 3; i++) products[pick(data.simples).id] = '';
   const saved = admin.post(
@@ -394,7 +394,7 @@ function categoryManagement(admin, data) {
       custom_use_parent_settings: '0',
       custom_apply_to_products: '0',
       name,
-      url_key: name.replace(/_/g, '-'),
+      url_key: name,
       display_mode: 'PRODUCTS',
       default_sort_by: 'position',
       category_products: JSON.stringify(products),
@@ -431,7 +431,7 @@ function promo(admin) {
     { params: 'form/sales_rule_formrule_conditions_fieldset_/form_namespace/sales_rule_form/', ajax: true }
   );
   think();
-  const name = uniq(`${PREFIX}rule_`);
+  const name = uniq(`${PREFIX}-rule-`);
   admin.post(
     'sales_rule/promo_quote/save',
     {
@@ -473,7 +473,7 @@ function customerManagement(admin, data) {
   const customer = pick(data.customers);
   admin.get('customer/index/edit', 'Admin Edit Customer', { params: `id/${customer.id}/`, expect: ['Customer Information'] });
   think();
-  const n = match(customer.email, /user_(\d+)@/) || '0';
+  const n = match(customer.email, /-user-(\d+)@/) || '0';
   const body = {
     'customer[entity_id]': String(customer.id),
     'customer[website_id]': '1',

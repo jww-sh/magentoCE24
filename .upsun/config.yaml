@@ -128,6 +128,8 @@ applications:
         sed -i 's/_process>1<\/use_/_process>0<\/use_/g' ${PLATFORM_APP_DIR}/vendor/magento/*/etc/cron_groups.xml
       deploy: |
         php ./vendor/bin/ece-tools run scenario/deploy.xml
+        # Publish the k6 scripts to network storage for the k6-docker task (docker images get no repo code)
+        rm -rf var/k6/scripts && mkdir -p var/k6/reports && cp -r testing/k6 var/k6/scripts && chmod -R a+rwX var/k6
       post_deploy: |
         php ./vendor/bin/ece-tools run scenario/post-deploy.xml
     # The configuration of scheduled execution.
@@ -294,6 +296,35 @@ tasks:
         VUS: 10
         ADMIN_VUS: 1
         DURATION: 10m
+
+  # Same test from the official grafana/k6 image (experimental until verified;
+  # remove the nodejs "k6" task above once this one works). The image gets no
+  # repository code: the app deploy hook copies testing/k6 to var/k6/scripts on
+  # network storage, mounted here at /home/k6 (the only directory in the image).
+  # Reports: /app/var/k6/reports in the app container.
+  #   upsun task:run k6-docker --variable env:PROFILE=smoke --wait
+  k6-docker:
+    type: docker:1
+    image:
+      name: grafana/k6:latest
+    run:
+      # The image has ENTRYPOINT ["k6"] and runs as uid 12345. If Upsun appends this
+      # command to the entrypoint instead of replacing it, use: run /home/k6/scripts/main.js
+      command: sh /home/k6/scripts/run-task.sh
+      timeout: 7200
+    mounts:
+      "/home/k6":
+        source: service
+        service: networkstorage
+        source_path: "var/k6"
+    variables:
+      env:
+        URL: https://shop.izinga.za.net
+        PROFILE: combined
+        VUS: 10
+        ADMIN_VUS: 1
+        DURATION: 10m
+        REPORT_ROOT: /home/k6/reports
 
 routes:
   https://{default}/:

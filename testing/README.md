@@ -83,6 +83,17 @@ upsun ssh -e main --app app -- ls var/k6-reports/latest
 upsun scp -e main --app app remote:var/k6-reports/latest/report.html .
 ```
 
+### Docker variant (experimental)
+`k6-docker` runs the same scripts from the official `grafana/k6:2.3.0` image
+(`type: docker:1`). Docker apps get no repository code, so the app deploy hook
+copies `testing/k6` to `var/k6/scripts` on network storage, which the task mounts at
+`/home/k6`. Reports go to `/app/var/k6/reports`. Not verified yet: if it works,
+drop the nodejs `k6` task; if Upsun appends `run.command` to the image's
+`ENTRYPOINT ["k6"]`, change the command to `run /home/k6/scripts/main.js`.
+```
+upsun task:run k6-docker -e main --variable env:PROFILE=smoke --wait
+```
+
 ## Running locally
 ```
 ./run.sh                                  # crawler, 2 VUs, 30s
@@ -109,6 +120,24 @@ upsun scp -e main --app app remote:var/k6-reports/latest/report.html .
 | `DEBUG` | off | log failed checks |
 
 ## Cleanup
-`PROFILE=cleanup` cancels open k6 orders and deletes k6 products, CMS pages, cart
-rules and categories. Magento Open Source cannot delete orders, so invoiced k6
-orders remain. Every order/customer/email k6 makes uses an `@example.com` address.
+Two steps remove every trace of a test run:
+
+1. `PROFILE=cleanup` (add `CLEANUP_CUSTOMERS=1 CLEANUP_ADMINS=1` to also remove the
+   reusable customers, `k6_simple_N` products and `k6_admin_N` users) cancels open
+   k6 orders and deletes k6 products, CMS pages, cart rules and categories via the
+   API. Run it locally or as the task.
+2. `cleanup-db.php` removes what the API can't, at the database level: k6 orders
+   with their invoices/shipments/credit memos and grid rows, MSI reservations,
+   the stock k6 shipments deducted (added back, nothing else touched), document
+   number sequences, guest carts from the load generators, k6 search terms,
+   orphaned customer token revocations / logs and visitors in the test window.
+   Dry run first, then `--apply`:
+   ```
+   upsun ssh -e main --app app -- "php -- --since='2026-10-12 00:00:00'" < testing/k6/cleanup-db.php
+   upsun ssh -e main --app app -- "php -- --since='2026-10-12 00:00:00' --apply" < testing/k6/cleanup-db.php
+   ```
+   Then Reports > Statistics > Refresh Lifetime Statistics.
+
+Not covered by the scripts: the `ADMIN_USER`/`ADMIN_PASSWORD` environment
+variables, the k6 admin user itself, `/app/var/k6-reports` and `/app/var/k6`, and
+web/PHP access logs (rotated by the platform).

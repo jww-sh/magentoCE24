@@ -47,7 +47,7 @@ export const cfg = {
   adminPassword: str('ADMIN_PASSWORD', ''),
   adminRoleId: str('ADMIN_ROLE_ID', '1'),
   adminVus: num('ADMIN_VUS', 1),
-  // Use the main admin account for every admin VU instead of k6_admin_N users.
+  // Use the main admin account for every admin VU instead of k6mlt-admin-N users.
   // Only safe when admin/security/admin_account_sharing=1.
   adminShareAccount: bool('ADMIN_SHARE_ACCOUNT', false),
 
@@ -79,10 +79,27 @@ export const cfg = {
   // Cleanup profile toggles
   cleanupCustomers: bool('CLEANUP_CUSTOMERS', false),
   cleanupAdmins: bool('CLEANUP_ADMINS', false),
+  // SKUs whose stock was already corrected by hand; the shipped-stock restore skips them
+  cleanupStockSkip: str('CLEANUP_STOCK_SKIP', '').split(',').map((s) => s.trim()).filter(Boolean),
 };
 
-// Everything k6 creates carries this prefix so it can be found and removed.
-export const PREFIX = 'k6_';
+// Tag on everything k6 creates (emails, SKUs, names, usernames) so it can be found
+// and removed. Deliberately free of SQL LIKE wildcards (_ and %) so a search can't
+// match anything else. TEST_PREFIX only exists to clean up data from older runs.
+export const PREFIX = str('TEST_PREFIX', 'k6mlt');
+
+// tagged('user', 1) -> 'k6mlt-user-1'
+export function tagged(kind, ...parts) {
+  return [PREFIX, kind, ...parts].join('-');
+}
+
+// Domain for every address k6 creates; .local never resolves, so mail can't go anywhere.
+export const EMAIL_DOMAIN = str('EMAIL_DOMAIN', 'example.local');
+
+// taggedEmail('user', 1) -> 'k6mlt-user-1@example.local'
+export function taggedEmail(kind, ...parts) {
+  return `${tagged(kind, ...parts)}@${EMAIL_DOMAIN}`;
+}
 
 // Iteration mix, from the JMX "Combined Benchmark Pool" c* properties.
 // Override any weight with -e PCT_<KEY>=n (e.g. PCT_GUEST_CHECKOUT=10).

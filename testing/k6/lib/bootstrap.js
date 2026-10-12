@@ -3,7 +3,7 @@
 // every run reuses what previous runs created.
 import http from 'k6/http';
 import crypto from 'k6/crypto';
-import { cfg, PREFIX } from './config.js';
+import { cfg, PREFIX, tagged, taggedEmail, EMAIL_DOMAIN } from './config.js';
 import { baseHeaders, url, qs, match } from './http.js';
 import { AdminClient } from './admin.js';
 
@@ -60,14 +60,14 @@ export function searchCriteria(field, value, condition, pageSize) {
 }
 
 function ensureCustomers(token, password, regionId) {
-  const found = rest(token, 'GET', `customers/search?${searchCriteria('email', `${PREFIX}user_%@example.com`)}`);
+  const found = rest(token, 'GET', `customers/search?${searchCriteria('email', `${PREFIX}-user-%@${EMAIL_DOMAIN}`)}`);
   const existing = {};
   for (const c of (found.body && found.body.items) || []) existing[c.email] = c.id;
 
   const customers = [];
   let created = 0;
   for (let i = 1; i <= cfg.customerCount; i++) {
-    const email = `${PREFIX}user_${i}@example.com`;
+    const email = taggedEmail('user', i);
     if (existing[email]) {
       customers.push({ email, id: existing[email] });
       continue;
@@ -109,13 +109,13 @@ function ensureCustomers(token, password, regionId) {
 // Products that admin "edit product" flows are allowed to modify. Not visible
 // on the storefront (visibility 1) so shoppers never see them.
 function ensureProducts(token, count) {
-  const found = rest(token, 'GET', `products?${searchCriteria('sku', `${PREFIX}simple_%`)}`);
+  const found = rest(token, 'GET', `products?${searchCriteria('sku', `${PREFIX}-simple-%`)}`);
   const existing = {};
   for (const p of (found.body && found.body.items) || []) existing[p.sku] = p.id;
 
   const products = [];
   for (let i = 1; i <= count; i++) {
-    const sku = `${PREFIX}simple_${i}`;
+    const sku = tagged('simple', i);
     if (existing[sku]) {
       products.push({ sku, id: existing[sku] });
       continue;
@@ -135,7 +135,7 @@ function ensureProducts(token, count) {
           type_id: 'simple',
           weight: 1,
           extension_attributes: { website_ids: [1], stock_item: { qty: 100000, is_in_stock: true } },
-          custom_attributes: [{ attribute_code: 'url_key', value: sku.replace(/_/g, '-') }],
+          custom_attributes: [{ attribute_code: 'url_key', value: sku }],
         },
       },
       'SetUp - Create Product'
@@ -147,12 +147,12 @@ function ensureProducts(token, count) {
 }
 
 // Magento allows one session per admin user (admin_account_sharing=0), so each
-// admin VU gets its own k6_admin_N user, created through the admin UI (there is
+// admin VU gets its own k6mlt-admin-N user, created through the admin UI (there is
 // no REST endpoint for admin users).
 function ensureAdminUsers(password) {
   const count = Math.max(1, cfg.adminVus);
   const users = [];
-  for (let i = 1; i <= count; i++) users.push({ username: `${PREFIX}admin_${i}`, password });
+  for (let i = 1; i <= count; i++) users.push({ username: tagged('admin', i), password });
 
   const admin = new AdminClient(cfg.adminUser, cfg.adminPassword);
   if (!admin.login()) throw new Error('Main admin login failed; check ADMIN_USER/ADMIN_PASSWORD and that admin 2FA is disabled');
@@ -160,7 +160,7 @@ function ensureAdminUsers(password) {
     throw new Error(`${cfg.adminUser} cannot see System > Permissions > All Users; it needs the Administrators role`);
   }
   const list = admin.get('admin/user/index', 'SetUp - Admin Users', { params: 'limit/200/' });
-  const existing = new Set((list.body || '').match(new RegExp(`${PREFIX}admin_\\d+`, 'g')) || []);
+  const existing = new Set((list.body || '').match(new RegExp(`${PREFIX}-admin-\\d+`, 'g')) || []);
 
   let created = 0;
   for (const u of users) {
@@ -175,7 +175,7 @@ function ensureAdminUsers(password) {
         username: u.username,
         firstname: 'K6',
         lastname: u.username,
-        email: `${u.username}@example.com`,
+        email: `${u.username}@${EMAIL_DOMAIN}`,
         password: u.password,
         password_confirmation: u.password,
         interface_locale: 'en_US',
@@ -192,7 +192,7 @@ function ensureAdminUsers(password) {
   }
   // Trust the user grid, not the success message
   const after = admin.get('admin/user/index', 'SetUp - Admin Users', { params: 'limit/200/' });
-  const present = new Set((after.body || '').match(new RegExp(`${PREFIX}admin_\\d+`, 'g')) || []);
+  const present = new Set((after.body || '').match(new RegExp(`${PREFIX}-admin-\\d+`, 'g')) || []);
   admin.logout();
   const missing = users.filter((u) => !present.has(u.username)).map((u) => u.username);
   if (missing.length) throw new Error(`Admin users missing after save: ${missing.join(', ')}`);

@@ -24,9 +24,11 @@ export class AdminClient {
   }
 
   harvest(res) {
-    // URLs appear plain, JSON-escaped (\/) and unicode-escaped (\u002F); the final
+    // URLs appear plain, HTML-entity (&#x2F;), JSON-escaped (\/) and unicode-escaped (\u002F); the final
     // URL after redirects carries a key too
     const body = `${res.url || ''}\n${res.body || ''}`
+      .replace(/&#x2F;/gi, '/')
+      .replace(/&#x3A;/gi, ':')
       .replace(/\\u002F/gi, '/')
       .replace(/\\u003A/gi, ':')
       .replace(/\\\//g, '/');
