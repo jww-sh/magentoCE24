@@ -280,6 +280,7 @@ services:
 # Reports land in /app/var/k6-reports in the app container.
 tasks:
   loadtesting-k6:
+    container_profile: BALANCED
     type: nodejs:24 # any runtime works, k6 is a static binary
     source:
       root: testing/k6
