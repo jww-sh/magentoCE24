@@ -293,7 +293,9 @@ tasks:
         # Task settings (URL from the primary route, profile, VUs, duration) are in
         # testing/k6/.environment, which Upsun loads when the task container starts.
     run:
-      command: bash run-task.sh
+      command: |
+        set  | grep PLAT
+        bash run-task.sh
       timeout: 7200
     mounts:
       "/reports":
