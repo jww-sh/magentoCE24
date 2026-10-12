@@ -1,0 +1,18 @@
+# Loaded by Upsun when the k6 task container starts (evaluated then, not at build time).
+# Values passed with `upsun task:run k6 --variable env:NAME=value` take precedence.
+
+# URL: the environment's primary route (https://{default}/). node rather than jq: node is
+# always there in the nodejs task image.
+if [ -z "${URL:-}" ]; then
+  if [ -n "${PLATFORM_ROUTES:-}" ]; then
+    URL=$(echo "$PLATFORM_ROUTES" | base64 --decode | node -e 'let s = ""; process.stdin.on("data", (d) => (s += d)).on("end", () => { const r = JSON.parse(s); console.log(Object.keys(r).find((k) => r[k].primary) || ""); });')
+  else
+    echo "k6: PLATFORM_ROUTES is not set in this container; pass --variable env:URL=https://..." >&2
+  fi
+fi
+export URL
+
+export PROFILE=${PROFILE:-combined}
+export VUS=${VUS:-25}
+export ADMIN_VUS=${ADMIN_VUS:-2}
+export DURATION=${DURATION:-3m}
