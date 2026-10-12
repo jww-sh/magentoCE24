@@ -248,6 +248,7 @@ services:
       maxmemory_policy: allkeys-lru
 
   indexer:
+    container_profile: BALANCED
     type: opensearch:3
     configuration:
       plugins:
