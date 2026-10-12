@@ -93,6 +93,28 @@ upsun ssh -e main --app app -- ls var/k6-reports/latest
 upsun scp -e main --app app remote:var/k6-reports/latest/report.html .
 ```
 
+### What each run records
+Every run directory (and the `/k6-reports/` index) has:
+- `report.html`, `summary.json`, `k6.log`: k6 dashboard, metrics and output
+- `run-info.json`: exit code (`99` = thresholds crossed), complete and **interrupted**
+  iterations (iterations cut off at the end of the run / ramp-down)
+- `failures.jsonl`: one record per failed check or flow exception: scenario, flow, VU,
+  iteration, the failed checks, and the **full request** (method, URL, headers, body) and
+  **response** (status, network error, headers, first 4 KB of the body, timings). Passwords,
+  tokens, form keys and cookie values are masked. Rendered at `/k6-reports/<run>/failures`,
+  grouped by flow. `FAILURE_LOG_LIMIT` (default 50) caps records per VU.
+- `console.log`: everything else the scripts logged (bootstrap, debug)
+
+The `magento_failed_iterations{flow}` metric counts iterations with a failed check or an exception.
+
+### Varnish checks
+`combined`, `graphql`, `storefront` and `smoke` also run a one-off set of full-page-cache
+checks against `.upsun/varnish.vcl` (read from `X-Magento-Cache-Debug`): guest pages
+MISS→HIT, a different `X-Magento-Vary` gets its own entry, logged-in customers never get
+the guest copy, customer/cart/section requests are never cached, GraphQL GET caches per
+`X-Magento-Cache-Id` (and per customer with a token), static assets cache with their own
+headers. They must all pass (`checks{suite:varnish}` = 100%). `SMOKE_GROUPS=varnish` runs only these.
+
 ## Running locally
 ```
 ./run.sh                                  # crawler, 2 VUs, 30s
@@ -103,6 +125,7 @@ upsun scp -e main --app app remote:var/k6-reports/latest/report.html .
 | Name | Default | |
 | --- | --- | --- |
 | `PROFILE` | `combined` | `combined`, `graphql`, `storefront`, `admin`, `crawler`, `smoke`, `cleanup` |
+| `SMOKE_GROUPS` | `web,graphql,admin,varnish` | flow groups the smoke profile runs |
 | `URL` | `https://shop.izinga.za.net` | |
 | `VUS` / `ADMIN_VUS` | `10` / `1` | storefront VUs / admin VUs |
 | `RAMP` / `DURATION` / `RAMP_DOWN` | `1m` / `10m` / `30s` | |
@@ -116,6 +139,7 @@ upsun scp -e main --app app remote:var/k6-reports/latest/report.html .
 | `BASIC_AUTH_USER` / `BASIC_AUTH_PASSWORD` | | HTTP auth in front of the site |
 | `MAX_DEPTH` / `SLEEP` | `5` / `1` | crawler |
 | `CLEANUP_CUSTOMERS` / `CLEANUP_ADMINS` | off | cleanup also removes k6 customers / admin users |
+| `FAILURE_LOG_LIMIT` | `50` | failure records (full request/response) per VU |
 | `DEBUG` | off | log failed checks |
 
 ## Cleanup
