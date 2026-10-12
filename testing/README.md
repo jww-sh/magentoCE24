@@ -89,17 +89,6 @@ upsun ssh -e main --app app -- ls var/k6-reports/latest
 upsun scp -e main --app app remote:var/k6-reports/latest/report.html .
 ```
 
-### Docker variant (experimental)
-`k6-docker` runs the same scripts from the official `grafana/k6:2.3.0` image
-(`type: docker:1`). Docker apps get no repository code, so the app deploy hook
-copies `testing/k6` to `var/k6/scripts` on network storage, which the task mounts at
-`/home/k6`. Reports go to `/app/var/k6/reports`. Not verified yet: if it works,
-drop the nodejs `k6` task; if Upsun appends `run.command` to the image's
-`ENTRYPOINT ["k6"]`, change the command to `run /home/k6/scripts/main.js`.
-```
-upsun task:run k6-docker -e main --variable env:PROFILE=smoke --wait
-```
-
 ## Running locally
 ```
 ./run.sh                                  # crawler, 2 VUs, 30s
@@ -149,4 +138,4 @@ Two steps remove every trace of a test run, in this order:
 
 Not covered: order/invoice number sequences (can't be rewound safely, so numbers
 continue after the gap), the `ADMIN_USER`/`ADMIN_PASSWORD` environment variables, the
-admin user itself, `/app/var/k6-reports` and `/app/var/k6`, and web/PHP access logs.
+admin user itself, `/app/var/k6-reports`, and web/PHP access logs.
