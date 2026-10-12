@@ -18,6 +18,7 @@ applications:
         - blackfire
         - apcu
         - redis
+        - lz4 # .magento.env.yaml compresses Redis sessions with lz4
     variables:
       env:
         #USE VARNISH
@@ -44,6 +45,11 @@ applications:
         MAGENTO_INDEXER_BATCH_SIZE__INVENTORY__SIMPLE: 210
         MAGENTO_INDEXER_BATCH_SIZE__INVENTORY__DEFAULT: 510
         MAGENTO_INDEXER_BATCH_SIZE__INVENTORY__CONFIGURABLE: 616
+        # Admin 2FA off (markshust/magento2-module-disabletwofactorauth) so the k6 task can log in
+        CONFIG__DEFAULT__TWOFACTORAUTH__GENERAL__ENABLE: 0
+        CONFIG__DEFAULT__TWOFACTORAUTH__GENERAL__ENABLE_FOR_API_TOKEN_GENERATION: 0
+        # Admin login CAPTCHA (shown after failed attempts, counted per user and per IP) off for the same reason
+        CONFIG__DEFAULT__ADMIN__CAPTCHA__ENABLE: 0
       php:
         memory_limit: "1024M"
     # Configuration of the build of this application.
@@ -257,6 +263,37 @@ services:
     container_profile: BALANCED
     type: network-storage:1.0
 
+# On-demand k6 load test (testing/k6). Run with:
+#   upsun task:run k6 --variable env:PROFILE=smoke --wait
+# Secrets (ADMIN_USER / ADMIN_PASSWORD) are sensitive environment variables, not set here.
+# Reports land in /app/var/k6-reports in the app container.
+tasks:
+  k6:
+    type: nodejs:24 # any runtime works, k6 is a static binary
+    source:
+      root: testing/k6
+    hooks:
+      build: |
+        set -e
+        K6_VERSION=v2.3.0
+        curl -fsSL "https://github.com/grafana/k6/releases/download/${K6_VERSION}/k6-${K6_VERSION}-linux-amd64.tar.gz" \
+          | tar -xz --strip-components=1 "k6-${K6_VERSION}-linux-amd64/k6"
+        ./k6 version
+    run:
+      command: bash run-task.sh
+      timeout: 7200
+    mounts:
+      "/reports":
+        source: service
+        service: networkstorage
+        source_path: "var/k6-reports"
+    variables:
+      env:
+        URL: https://shop.izinga.za.net
+        PROFILE: combined
+        VUS: 10
+        ADMIN_VUS: 1
+        DURATION: 10m
 
 routes:
   https://{default}/:
