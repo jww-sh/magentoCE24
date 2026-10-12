@@ -292,8 +292,9 @@ tasks:
         ./k6 version
         # Task settings, saved as literal text: Upsun sources .environment when the task
         # container starts, so the $(...) is evaluated then (PLATFORM_ROUTES only exists at
-        # runtime). Per-run values still win: upsun task:run k6 --variable env:VUS=50
-        echo 'export URL=$(echo $PLATFORM_ROUTES | base64 --decode | jq -r 'to_entries[] | select(.value.primary) | .key')' >> .environment
+        # runtime). These fixed values override --variable env:… on task:run; write them as
+        # e.g. 'export VUS=${VUS:-25}' to let per-run variables win instead.
+        echo 'export URL=$(echo $PLATFORM_ROUTES | base64 --decode | jq -r "to_entries[] | select(.value.primary) | .key")' >> .environment
         echo 'export PROFILE=combined' >> .environment
         echo 'export VUS=25' >> .environment
         echo 'export ADMIN_VUS=2' >> .environment

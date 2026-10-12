@@ -116,9 +116,12 @@ the guest copy, customer/cart/section requests are never cached, GraphQL GET cac
 headers. They must all pass (`checks{suite:varnish}` = 100%). `SMOKE_GROUPS=varnish` runs only these.
 
 ## Running locally
+With k6 v2.3.0 installed (same version as the task):
 ```
-./run.sh                                  # crawler, 2 VUs, 30s
-./run.sh -e PROFILE=smoke -e THINK_MS=0   # every flow once
+cd testing/k6
+k6 run -e URL=https://shop.example -e PROFILE=crawler -e VUS=2 -e DURATION=30s main.js
+k6 run -e URL=https://shop.example -e PROFILE=smoke -e THINK_MS=0 \
+       -e ADMIN_USER=... -e ADMIN_PASSWORD=... main.js        # every flow once
 ```
 
 ## Variables
@@ -126,7 +129,7 @@ headers. They must all pass (`checks{suite:varnish}` = 100%). `SMOKE_GROUPS=varn
 | --- | --- | --- |
 | `PROFILE` | `combined` | `combined`, `graphql`, `storefront`, `admin`, `crawler`, `smoke`, `cleanup` |
 | `SMOKE_GROUPS` | `web,graphql,admin,varnish` | flow groups the smoke profile runs |
-| `URL` | `https://shop.izinga.za.net` | |
+| `URL` | primary route on Upsun | required locally, e.g. `-e URL=https://shop.example` |
 | `VUS` / `ADMIN_VUS` | `10` / `1` | storefront VUs / admin VUs |
 | `RAMP` / `DURATION` / `RAMP_DOWN` | `1m` / `10m` / `30s` | |
 | `THINK_MS` / `THINK_DEVIATION_MS` | `2000` / `1000` | pause between requests |

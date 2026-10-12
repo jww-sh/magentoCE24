@@ -19,7 +19,8 @@ function bool(name, fallback) {
 }
 
 export const cfg = {
-  baseUrl: str('URL', 'https://shop.izinga.za.net').replace(/\/$/, ''),
+  // On Upsun the k6 task gets URL from the primary route (see .upsun/config.yaml)
+  baseUrl: str('URL', '').replace(/\/$/, ''),
   profile: str('PROFILE', 'combined'),
   debug: bool('DEBUG', false),
 
@@ -147,6 +148,10 @@ export const mix = {
   search: withOverrides(SEARCH_DEFAULTS),
   admin: withOverrides(ADMIN_DEFAULTS),
 };
+
+if (!/^https?:\/\//.test(cfg.baseUrl)) {
+  throw new Error(`URL must be set to the shop's address, e.g. -e URL=https://shop.example (got "${cfg.baseUrl}")`);
+}
 
 export function hasAdmin() {
   return cfg.adminUser !== '' && cfg.adminPassword !== '';

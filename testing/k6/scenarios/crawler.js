@@ -26,7 +26,7 @@ function cleanUrl(rawHref, baseUrl) {
     return null;
   }
 
-  // Extract base origin (e.g., https://shop.izinga.za.net)
+  // Extract base origin (e.g., https://shop.example)
   const baseOrigin = baseUrl.split('/').slice(0, 3).join('/');
 
   let fullUrl = href;
