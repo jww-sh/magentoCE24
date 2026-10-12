@@ -29,6 +29,9 @@ export function restToken() {
       tags: { name: 'SetUp - Admin Token' },
     }
   );
+  if (res.status === 0) {
+    throw new Error(`Cannot reach ${cfg.baseUrl} (${res.error || 'network error'}); check the URL variable`);
+  }
   if (res.status !== 200) {
     throw new Error(
       `Admin REST token failed (${res.status}): ${res.body}. Is twofactorauth/general/enable_for_api_token_generation=0?`

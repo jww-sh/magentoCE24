@@ -300,7 +300,7 @@ tasks:
         source_path: "var/k6-reports"
     variables:
       env:
-        URL: "$(echo $PLATFORM_ROUTES | base64 --decode | jq -r 'to_entries[] | select(.value.primary) | .key')"
+        URL: '$(echo $PLATFORM_ROUTES | base64 --decode | jq -r 'to_entries[] | select(.value.primary) | .key')'
         PROFILE: combined
         VUS: 25
         ADMIN_VUS: 2
