@@ -155,12 +155,12 @@ function ensureProducts(token, count) {
 }
 
 // Magento allows one session per admin user (admin_account_sharing=0), so each
-// admin VU gets its own k6mlt-admin-N user, created through the admin UI (there is
-// no REST endpoint for admin users).
-function ensureAdminUsers(password) {
-  const count = Math.max(1, cfg.adminVus);
-  const users = [];
-  for (let i = 1; i <= count; i++) users.push({ username: tagged('admin', i), password });
+// admin VU uses its own k6mlt-admin-<VU id> user, created through the admin UI (there
+// is no REST endpoint for admin users). Called by setup() with no names to check the
+// main admin's access, and by each admin VU for its own user on first use.
+export function ensureAdminUsers(usernames) {
+  const password = derivedPassword();
+  const users = usernames.map((username) => ({ username, password }));
 
   const admin = new AdminClient(cfg.adminUser, cfg.adminPassword);
   if (!admin.login()) throw new Error('Main admin login failed; check ADMIN_USER/ADMIN_PASSWORD and that admin 2FA is disabled');
@@ -204,8 +204,8 @@ function ensureAdminUsers(password) {
   admin.logout();
   const missing = users.filter((u) => !present.has(u.username)).map((u) => u.username);
   if (missing.length) throw new Error(`Admin users missing after save: ${missing.join(', ')}`);
-  created = users.length - existing.size;
-  console.log(`Admin users: ${users.length} (${created} created)`);
+  created = users.filter((u) => !existing.has(u.username)).length;
+  if (users.length) console.log(`Admin users: ${users.map((u) => u.username).join(', ')} (${created} created)`);
   return users;
 }
 
@@ -214,13 +214,18 @@ export function bootstrap(regionId, needAdminUsers) {
   const password = derivedPassword();
   const customers = ensureCustomers(token, password, regionId);
   const products = ensureProducts(token, Math.max(5, cfg.adminVus * 2));
-  let adminUsers = [];
+  // admin: null (no admin flows), { shared: true } (every VU uses ADMIN_USER) or
+  // { perVu: true } (each admin VU creates/uses k6mlt-admin-<VU id> on first use).
+  let admin = null;
   if (needAdminUsers) {
-    adminUsers = cfg.adminShareAccount
-      ? [{ username: cfg.adminUser, password: cfg.adminPassword }]
-      : ensureAdminUsers(password);
+    if (cfg.adminShareAccount) {
+      admin = { shared: true };
+    } else {
+      ensureAdminUsers([]); // fail early if the main admin can't manage users
+      admin = { perVu: true };
+    }
   }
   // No passwords in the returned data: k6 writes setup data into summary.json.
   // VUs derive them again with derivedPassword() / adminPasswordFor().
-  return { customers, adminUsers: adminUsers.map((u) => ({ username: u.username })), k6Products: products };
+  return { customers, admin, k6Products: products };
 }

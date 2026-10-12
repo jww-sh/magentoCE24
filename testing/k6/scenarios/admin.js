@@ -11,17 +11,20 @@
 // link is reused with the k6-owned entity id.
 import exec from 'k6/execution';
 import { group } from 'k6';
-import { cfg, mix, PREFIX } from '../lib/config.js';
+import { cfg, mix, PREFIX, tagged } from '../lib/config.js';
 import { AdminClient } from '../lib/admin.js';
-import { adminPasswordFor } from '../lib/bootstrap.js';
+import { adminPasswordFor, ensureAdminUsers } from '../lib/bootstrap.js';
 import { think, pick, weighted, match, uniq } from '../lib/http.js';
 
 let client = null;
 
 function adminFor(data) {
   if (!client) {
-    const u = data.adminUsers[(exec.vu.idInTest - 1) % data.adminUsers.length];
-    client = new AdminClient(u.username, adminPasswordFor(u.username));
+    // One admin user per VU: VU ids aren't contiguous per scenario, so mapping a fixed
+    // pool by id modulo let two VUs share a user and log each other out.
+    const username = data.admin.shared ? cfg.adminUser : tagged('admin', exec.vu.idInTest);
+    if (!data.admin.shared) ensureAdminUsers([username]);
+    client = new AdminClient(username, adminPasswordFor(username));
   }
   return client;
 }
@@ -504,7 +507,7 @@ export const ADMIN_FLOWS = {
 };
 
 export function adminFlow(data, which) {
-  if (!data.adminUsers || data.adminUsers.length === 0) return skip('no admin users (ADMIN_USER/ADMIN_PASSWORD unset?)');
+  if (!data.admin) return skip('no admin access (ADMIN_USER/ADMIN_PASSWORD unset?)');
   const key = which || weighted(mix.admin);
   session(data, key, (admin) => ADMIN_FLOWS[key](admin, data));
 }

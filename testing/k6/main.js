@@ -130,7 +130,7 @@ export function setup() {
   console.log(
     `Catalog: ${catalog.categories.length} categories, ${catalog.simples.length} simple, ${catalog.configurables.length} configurable products`
   );
-  let boot = { customers: [], adminUsers: [], k6Products: [] };
+  let boot = { customers: [], admin: null, k6Products: [] };
   if (hasAdmin()) {
     const wantAdminUsers = cfg.profile !== 'storefront' && cfg.adminVus > 0;
     boot = bootstrap(catalog.regionId, wantAdminUsers);
@@ -194,7 +194,7 @@ export function smoke(data) {
     if (key === 'search') ['quick', 'quick_filter'].forEach((k) => runIteration(`graphql search ${k}`, () => gq.gqlSearch(data, k)));
     else runIteration(`graphql ${key}`, () => GRAPHQL_FLOWS[key](data));
   }
-  if (run('admin') && data.adminUsers && data.adminUsers.length) {
+  if (run('admin') && data.admin) {
     for (const key of Object.keys(ADMIN_FLOWS)) {
       http.cookieJar().clear(cfg.baseUrl);
       runIteration(`admin ${key}`, () => adminFlow(data, key));
