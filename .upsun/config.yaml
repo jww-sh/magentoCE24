@@ -308,9 +308,13 @@ tasks:
     image:
       name: grafana/k6:latest
     run:
-      # The image has ENTRYPOINT ["k6"] and runs as uid 12345. If Upsun appends this
-      # command to the entrypoint instead of replacing it, use: run /home/k6/scripts/main.js
-      command: sh /home/k6/scripts/run-task.sh
+      # The k6 binary is at /app/bin/k6 in the task container. Where the mount lands
+      # isn't documented, so look in both places and list the filesystem if neither
+      # has the scripts (run-task.sh also finds the binary by itself).
+      command: >-
+        sh -c 'for d in /home/k6/scripts /app/home/k6/scripts /app/scripts; do
+        if [ -f "$d/run-task.sh" ]; then exec sh "$d/run-task.sh"; fi; done;
+        echo "k6 scripts not found; filesystem:"; ls -la / /app /app/bin /home 2>&1; exit 1'
       timeout: 7200
     mounts:
       "/home/k6":
@@ -324,7 +328,6 @@ tasks:
         VUS: 10
         ADMIN_VUS: 1
         DURATION: 10m
-        REPORT_ROOT: /home/k6/reports
 
 routes:
   https://{default}/:

@@ -7,10 +7,21 @@
 set -u
 cd "$(dirname "$0")"
 
-K6_BIN="./k6"
-[ -x "$K6_BIN" ] || K6_BIN="$(command -v k6)"
+# nodejs task: ./k6 from the build hook; k6-docker task: /app/bin/k6; locally: PATH
+K6_BIN="${K6_BIN:-}"
+for candidate in ./k6 /app/bin/k6 /usr/bin/k6 "$(command -v k6 2>/dev/null)"; do
+  [ -z "$K6_BIN" ] && [ -n "$candidate" ] && [ -x "$candidate" ] && K6_BIN="$candidate"
+done
+if [ -z "$K6_BIN" ]; then
+  echo "k6 binary not found" >&2
+  exit 1
+fi
 
 PROFILE="${PROFILE:-combined}"
+# k6-docker: scripts live in <mount>/scripts, reports go to <mount>/reports next to them
+if [ -z "${REPORT_ROOT:-}" ] && [ -d ../reports ]; then
+  REPORT_ROOT="$(cd ../reports && pwd)"
+fi
 REPORT_ROOT="${REPORT_ROOT:-${PLATFORM_APP_DIR:-.}/reports}"
 OUT="${REPORT_ROOT}/$(date -u +%Y%m%dT%H%M%SZ)-${PROFILE}"
 mkdir -p "$OUT"
