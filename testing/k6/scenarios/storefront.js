@@ -10,14 +10,21 @@ import { derivedPassword } from '../lib/bootstrap.js';
 
 const IN_STOCK = '<span>In stock</span>';
 
-// exec.vu.idInTest is globally unique across all scenarios in a combined run.
-// In a combined run k6 assigns IDs 1-N to storefront and N+1-2N to graphql VUs,
-// so they naturally land in different parts of the customer pool with no offset needed.
-// customerCount defaults to vus*2.1, which guarantees pool size > 2*vus (the max
-// number of globally unique VU IDs), so no two concurrent VUs ever share a customer.
+// Each customer-using scenario gets its own non-overlapping slice of the pool.
+// This prevents collisions when k6 reuses VU IDs across concurrent scenarios
+// (which can happen with the shared ramping-vus VU pool).
+// customerCount = vus*3, so each slice is vus*1.5 — a 50% buffer above peak VU count.
+const SCENARIO_OFFSETS = {
+  storefront: 0,
+  graphql:    1,
+};
+const SCENARIO_SLICE_COUNT = Object.keys(SCENARIO_OFFSETS).length;
+
 export function customerFor(data) {
   const n = data.customers.length;
-  return data.customers[(exec.vu.idInTest - 1) % n];
+  const sliceIndex = SCENARIO_OFFSETS[exec.scenario.name] ?? 0;
+  const sliceSize = Math.floor(n / SCENARIO_SLICE_COUNT);
+  return data.customers[sliceIndex * sliceSize + ((exec.vu.idInTest - 1) % sliceSize)];
 }
 
 export function home() {

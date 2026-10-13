@@ -123,6 +123,21 @@ function gqlAddress(data, firstname, lastname) {
   return out;
 }
 
+// Removes all items currently in the cart before adding fresh ones.
+// Prevents leftover items from a failed previous iteration from stacking up.
+function clearGQLCart(cartId, token) {
+  const d = q('GraphQL Get Cart Items', `query($c:String!){ cart(cart_id:$c){ items{ uid } } }`, { c: cartId }, token, null);
+  for (const item of (d && d.cart && d.cart.items) || []) {
+    q(
+      'GraphQL Remove Cart Item',
+      `mutation($c:String!,$u:ID!){ removeItemFromCart(input:{cart_id:$c,cart_item_uid:$u}){ cart{ total_quantity } } }`,
+      { c: cartId, u: item.uid },
+      token,
+      null
+    );
+  }
+}
+
 function checkoutCart(cartId, data, token, email) {
   const addr = gqlAddress(data, 'K6', token ? 'Customer' : 'Guest');
   if (!token) {
@@ -282,6 +297,7 @@ export function gqlCustomerCheckout(data) {
     think();
     const cartId = createCart(token);
     if (!cartId) return;
+    clearGQLCart(cartId, token);
     addToCart(cartId, data, token, 2, 2);
     checkoutCart(cartId, data, token, null);
   });

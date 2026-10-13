@@ -4,7 +4,7 @@ import http from 'k6/http';
 import exec from 'k6/execution';
 import { group } from 'k6';
 import { cfg, taggedEmail } from '../lib/config.js';
-import { get, postJson, think, match, initFormKey, ordersPlaced } from '../lib/http.js';
+import { get, postJson, think, match, initFormKey, ordersPlaced, url } from '../lib/http.js';
 import { home, category, addProductsToCart, customerLogin, customerLogout } from './storefront.js';
 
 const REFERER = { Referer: `${cfg.baseUrl}/checkout/` };
@@ -25,6 +25,22 @@ function address(data, firstname, lastname) {
   };
   if (data.regionId) out.regionId = data.regionId;
   return out;
+}
+
+// Clears all items from the customer's server-side cart before adding fresh ones.
+// Without this, a failed checkout leaves items behind; the next iteration adds on
+// top, causing unexpected item counts and "shipping method missing" cascades.
+function clearCustomerCart() {
+  const res = get('rest/default/V1/carts/mine/items', 'Cart Clear - Get Items', { noBust: true });
+  let items = [];
+  try { items = JSON.parse(res.body || '[]'); } catch (e) {}
+  if (!Array.isArray(items)) return;
+  for (const item of items) {
+    http.del(url(`rest/default/V1/carts/mine/items/${item.item_id}`), null, {
+      headers: { 'Content-Type': 'application/json' },
+      tags: { name: 'Cart Clear - Delete Item' },
+    });
+  }
 }
 
 function orderPlaced(name) {
@@ -59,7 +75,7 @@ export function guestCheckout(data) {
     );
     if (estimateRes.status !== 200) return;
     const addr = address(data, 'K6', 'Guest');
-    postJson(
+    const guestShipping = postJson(
       `rest/default/V1/guest-carts/${cartId}/shipping-information`,
       {
         addressInformation: {
@@ -71,6 +87,7 @@ export function guestCheckout(data) {
       'Checkout Shipping Information',
       { headers: REFERER, expect: ['"payment_methods"'] }
     );
+    if (guestShipping.status !== 200) return;
     think();
     const order = postJson(
       `rest/default/V1/guest-carts/${cartId}/payment-information`,
@@ -96,6 +113,7 @@ export function customerCheckout(data) {
     think();
     const session = customerLogin(data);
     if (!session.ok) return;
+    clearCustomerCart();
     think();
     category(data);
     think();
@@ -122,7 +140,7 @@ export function customerCheckout(data) {
       return;
     }
     const addr = Object.assign(address(data, 'K6', 'Customer'), { customerAddressId: addressId, customerId });
-    postJson(
+    const custShipping = postJson(
       'rest/default/V1/carts/mine/shipping-information',
       {
         addressInformation: {
@@ -134,6 +152,10 @@ export function customerCheckout(data) {
       'Checkout Shipping Information',
       { headers: REFERER, expect: ['"payment_methods"'] }
     );
+    if (custShipping.status !== 200) {
+      customerLogout();
+      return;
+    }
     think();
     const order = postJson(
       'rest/default/V1/carts/mine/payment-information',
