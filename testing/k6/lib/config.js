@@ -56,7 +56,7 @@ export const cfg = {
 
   customerCount: num('CUSTOMER_COUNT', Math.max(20, vus * 2.1)),
   maxProducts: num('MAX_PRODUCTS', 400),
-  searchTerms: str('SEARCH_TERMS', 'bag,jacket,shirt,pants,watch,yoga,tee,short,hoodie,bra').split(','),
+  searchTerms: str('SEARCH_TERMS', 'bag,jacket,shirt,pants,watch,yoga,tee,short,hoodie,bra,small,medium,large,extra large,plus size,petite,regular,XXL,black,white,red,blue,green,gray,navy,purple,pink,orange,yellow,brown,silver,gold,coral,teal,maroon,olive,khaki,cream,beige,charcoal,burgundy,turquoise,lavender,mint,stripe,plaid,fleece,cotton,wool,denim,running,training,sport,casual,slim,fitted,relaxed,women,men,kids,vest,skirt,dress,coat,blazer,cardigan,leggings,polo,sweater,jeans,chinos,scarf,cap,boots,sneakers,sandals,blouse,tunic,jumpsuit,tank top,swimsuit').split(','),
 
   // Address used for checkout and seeded customers (JMX defaults)
   address: {
