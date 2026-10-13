@@ -49,7 +49,7 @@ function pageCaching(data) {
   expect(fetch(page, 'category'), 'category', (r) => r.status === 200 && cacheState(r) === 'MISS', 'first request is MISS');
   expect(fetch(page, 'category'), 'category', isHit, 'second request is HIT');
   const fakeVary = { Cookie: 'X-Magento-Vary=0123456789abcdef0123456789abcdef01234567' };
-  expect(fetch(page, 'category vary'), 'X-Magento-Vary', notHit, 'cookie gets its own cache entry (not the guest HIT)');
+  expect(fetch(page, 'category vary', fakeVary), 'X-Magento-Vary', notHit, 'cookie gets its own cache entry (not the guest HIT)');
 }
 
 // Customer and private pages never come from the cache.

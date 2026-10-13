@@ -54,7 +54,9 @@ export function addProductsToCart(data, fk, simple, configurable) {
       headers: AJAX,
     });
     added++;
-    loadSections('cart,messages', 'Load Cart Section', [cartCountAtLeast(added)]);
+    const sr = loadSections('cart,messages', 'Load Cart Section', [cartCountAtLeast(added)]);
+    const sm = (sr.body || '').match(/"summary_count":(\d+)/);
+    if (sm) added = parseInt(sm[1], 10);
     think();
   }
   for (let i = 0; i < configurable; i++) {
@@ -64,7 +66,9 @@ export function addProductsToCart(data, fk, simple, configurable) {
     for (const attrId of Object.keys(p.superAttributes)) body[`super_attribute[${attrId}]`] = p.superAttributes[attrId];
     post('checkout/cart/add/', body, 'Configurable Product Add To Cart', { headers: AJAX });
     added++;
-    loadSections('cart,messages', 'Load Cart Section', [cartCountAtLeast(added)]);
+    const cr = loadSections('cart,messages', 'Load Cart Section', [cartCountAtLeast(added)]);
+    const cm = (cr.body || '').match(/"summary_count":(\d+)/);
+    if (cm) added = parseInt(cm[1], 10);
     think();
   }
   return added;

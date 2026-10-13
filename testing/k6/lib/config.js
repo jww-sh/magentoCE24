@@ -18,6 +18,8 @@ function bool(name, fallback) {
   return ['1', 'true', 'yes', 'on'].includes(String(v).toLowerCase());
 }
 
+const vus = num('VUS', 10);
+
 export const cfg = {
   // On Upsun the loadtesting-k6 task gets URL from the primary route (see .upsun/config.yaml)
   baseUrl: str('URL', '').replace(/\/$/, ''),
@@ -25,7 +27,7 @@ export const cfg = {
   debug: bool('DEBUG', false),
 
   // Load shape (storefront scenario)
-  vus: num('VUS', 10),
+  vus,
   duration: str('DURATION', '10m'),
   rampUp: str('RAMP', '1m'),
   rampDown: str('RAMP_DOWN', '30s'),
@@ -52,7 +54,7 @@ export const cfg = {
   // Only safe when admin/security/admin_account_sharing=1.
   adminShareAccount: bool('ADMIN_SHARE_ACCOUNT', false),
 
-  customerCount: num('CUSTOMER_COUNT', 20),
+  customerCount: num('CUSTOMER_COUNT', Math.max(20, vus)),
   maxProducts: num('MAX_PRODUCTS', 400),
   searchTerms: str('SEARCH_TERMS', 'bag,jacket,shirt,pants,watch,yoga,tee,short,hoodie,bra').split(','),
 
