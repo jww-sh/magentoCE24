@@ -141,7 +141,8 @@ export function setup() {
   let boot = { customers: [], admin: null, k6Products: [] };
   if (hasAdmin()) {
     const wantAdminUsers = cfg.profile !== 'storefront' && cfg.adminVus > 0;
-    const catalogSkus = [...catalog.simples, ...catalog.configurables].map((p) => p.sku);
+    // Simples own their stock directly; configurables carry it on child variant SKUs.
+    const catalogSkus = [...catalog.simples.map((p) => p.sku), ...catalog.variantSkus];
     boot = bootstrap(catalog.regionId, wantAdminUsers, catalogSkus);
   } else {
     console.warn('ADMIN_USER/ADMIN_PASSWORD not set: customer and admin flows are disabled');

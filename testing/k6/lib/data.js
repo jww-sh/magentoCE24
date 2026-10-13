@@ -118,5 +118,6 @@ export function discover() {
     );
   }
 
-  return { categories, simples, configurables, regionId: regions[cfg.address.regionCode] || null };
+  const variantSkus = configurables.flatMap((c) => c.variantSkus || []);
+  return { categories, simples, configurables, variantSkus, regionId: regions[cfg.address.regionCode] || null };
 }
