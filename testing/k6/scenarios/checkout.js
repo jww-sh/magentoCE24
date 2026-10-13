@@ -1,5 +1,6 @@
 // Checkout flows from the JMX: guest checkout via guest-carts REST and customer
 // checkout via carts/mine REST (session-authenticated, like the Luma checkout JS).
+import http from 'k6/http';
 import exec from 'k6/execution';
 import { group } from 'k6';
 import { cfg, taggedEmail } from '../lib/config.js';
@@ -32,6 +33,7 @@ function orderPlaced(name) {
 
 export function guestCheckout(data) {
   group('Checkout By Guest', () => {
+    http.cookieJar().clear(cfg.baseUrl);
     const fk = initFormKey();
     home();
     think();

@@ -1,6 +1,7 @@
 // Luma storefront flows ported from the JMX "Combined Benchmark Pool":
 // catalog browsing, site search (quick / quick + layered nav / advanced),
 // guest add to cart, compare products, wishlist.
+import http from 'k6/http';
 import exec from 'k6/execution';
 import { group } from 'k6';
 import { cfg, mix } from '../lib/config.js';
@@ -201,6 +202,7 @@ export function search(data, which) {
 
 export function addToCart(data) {
   group('Add To Cart By Guest', () => {
+    http.cookieJar().clear(cfg.baseUrl);
     const fk = initFormKey();
     home();
     think();
