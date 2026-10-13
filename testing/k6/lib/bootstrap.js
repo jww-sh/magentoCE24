@@ -211,7 +211,7 @@ export function ensureAdminUsers(usernames) {
 
 function resetCatalogStock(token, skus) {
   if (!skus || !skus.length) return;
-  const qty = 10000;
+  const qty = 100000;
   const chunkSize = 100;
   let reset = 0;
   for (let i = 0; i < skus.length; i += chunkSize) {

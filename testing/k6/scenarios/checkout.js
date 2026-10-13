@@ -51,12 +51,13 @@ export function guestCheckout(data) {
       headers: REFERER,
       expect: ['true'],
     });
-    postJson(
+    const estimateRes = postJson(
       `rest/default/V1/guest-carts/${cartId}/estimate-shipping-methods`,
       { address: { country_id: cfg.address.countryId, postcode: cfg.address.postcode } },
       'Checkout Estimate Shipping Methods',
       { headers: REFERER, expect: ['"available":true'] }
     );
+    if (estimateRes.status !== 200) return;
     const addr = address(data, 'K6', 'Guest');
     postJson(
       `rest/default/V1/guest-carts/${cartId}/shipping-information`,
@@ -89,6 +90,7 @@ export function guestCheckout(data) {
 
 export function customerCheckout(data) {
   group('Checkout By Customer', () => {
+    http.cookieJar().clear(cfg.baseUrl);
     home();
     think();
     const session = customerLogin(data);
@@ -108,12 +110,16 @@ export function customerCheckout(data) {
     }
     think();
 
-    postJson(
+    const estimateRes = postJson(
       'rest/default/V1/carts/mine/estimate-shipping-methods-by-address-id',
       { addressId },
       'Checkout Estimate Shipping Methods',
       { headers: REFERER, expect: ['"available":true'] }
     );
+    if (estimateRes.status !== 200) {
+      customerLogout();
+      return;
+    }
     const addr = Object.assign(address(data, 'K6', 'Customer'), { customerAddressId: addressId, customerId });
     postJson(
       'rest/default/V1/carts/mine/shipping-information',

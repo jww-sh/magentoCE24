@@ -134,7 +134,7 @@ function checkoutCart(cartId, data, token, email) {
       'setGuestEmailOnCart.cart'
     );
   }
-  q(
+  const shippingResult = q(
     'GraphQL Set Shipping Address On Cart',
     `mutation($cart:String!,$addr:CartAddressInput!){ setShippingAddressesOnCart(input:{cart_id:$cart,
        shipping_addresses:[{address:$addr}]}){ cart{ shipping_addresses{ available_shipping_methods{ carrier_code method_code } } } } }`,
@@ -142,6 +142,7 @@ function checkoutCart(cartId, data, token, email) {
     token,
     'setShippingAddressesOnCart.cart'
   );
+  if (!dig(shippingResult, 'setShippingAddressesOnCart.cart')) return;
   q(
     'GraphQL Set Billing Address On Cart',
     `mutation($cart:String!,$addr:CartAddressInput!){ setBillingAddressOnCart(input:{cart_id:$cart,
