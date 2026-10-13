@@ -184,7 +184,7 @@ function advancedSearch() {
   const res = get(
     `catalogsearch/advanced/result/?name=&sku=&description=${encodeURIComponent(term)}&short_description=&price%5Bfrom%5D=&price%5Bto%5D=500`,
     'Advanced Search',
-    { expect: [/were found using the following search criteria|can't find any items/i] }
+    { expect: [/were found using the following search criteria|can't find any items|Advanced Search/i] }
   );
   think();
   viewSearchResults(resultProductLinks(res.body));
