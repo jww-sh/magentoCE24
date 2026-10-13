@@ -96,7 +96,11 @@ export function discover() {
           const a = variant.attributes.find((x) => x.code === opt.attribute_code);
           if (a) superAttributes[opt.attribute_id_v2] = a.value_index;
         }
-        configurables.push(Object.assign(base, { superAttributes }));
+        // collect all in-stock variant SKUs — MSI stock lives on children, not the parent
+        const variantSkus = (p.variants || [])
+          .filter((v) => v.product && v.product.stock_status === 'IN_STOCK' && v.product.sku)
+          .map((v) => v.product.sku);
+        configurables.push(Object.assign(base, { superAttributes, variantSkus }));
       }
     }
     page++;
