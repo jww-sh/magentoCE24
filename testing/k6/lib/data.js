@@ -28,7 +28,7 @@ const PRODUCTS_QUERY = `query($page:Int!,$size:Int!){
       ... on CustomizableProductInterface { options { required } }
       ... on ConfigurableProduct {
         configurable_options{ attribute_id_v2 attribute_code }
-        variants{ attributes{ code value_index } product{ stock_status } }
+        variants{ attributes{ code value_index } product{ stock_status sku } }
       }
     }
   }
