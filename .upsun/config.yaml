@@ -202,11 +202,11 @@ services:
   db:
     type: mariadb:12.3
     configuration:
-      #properties:
-      #  optimizer_switch: "rowid_filter=off" may not apply anymore https://experienceleague.adobe.com/en/docs/commerce-operations/upgrade-guide/prepare/prerequisites#mysql-84-changes:~:text=MariaDB%2010.4%20and%2010.6
-      #  optimizer_use_condition_selectivity: 1
-      #  query_cache_size: 0
-      #  query_cache_type: 0
+      properties:
+        optimizer_switch: "rowid_filter=off" #may not apply anymore https://experienceleague.adobe.com/en/docs/commerce-operations/upgrade-guide/prepare/prerequisites#mysql-84-changes:~:text=MariaDB%2010.4%20and%2010.6
+        optimizer_use_condition_selectivity: 1
+        query_cache_size: 0
+        query_cache_type: 0
       schemas:
         - main
       endpoints:
@@ -221,11 +221,11 @@ services:
   db-replica:
     type: mariadb-replica:12.3
     configuration:
-  #    properties:
-  #      optimizer_switch: "rowid_filter=off" may not apply anymore  https://experienceleague.adobe.com/en/docs/commerce-operations/upgrade-guide/prepare/prerequisites#mysql-84-changes:~:text=MariaDB%2010.4%20and%2010.6
-  #      optimizer_use_condition_selectivity: 1
-  #      query_cache_size: 0
-  #      query_cache_type: 0
+      properties:
+        optimizer_switch: "rowid_filter=off" #may not apply anymore  https://experienceleague.adobe.com/en/docs/commerce-operations/upgrade-guide/prepare/prerequisites#mysql-84-changes:~:text=MariaDB%2010.4%20and%2010.6
+        optimizer_use_condition_selectivity: 1
+        query_cache_size: 0
+        query_cache_type: 0
       schemas:
         - main
       endpoints:
