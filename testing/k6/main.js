@@ -76,7 +76,7 @@ function once(exec) {
 }
 
 // Varnish cache checks run once alongside every load profile (and inside smoke)
-const varnishScenario = { varnish: once('varnish') };
+const varnishScenario = { varnish: { executor: 'per-vu-iterations', exec: 'varnish', vus: 1, iterations: 1, maxDuration: '3m' } };
 
 function scenarios() {
   const withAdmin = hasAdmin() && cfg.adminVus > 0;
@@ -133,7 +133,8 @@ export function setup() {
   let boot = { customers: [], admin: null, k6Products: [] };
   if (hasAdmin()) {
     const wantAdminUsers = cfg.profile !== 'storefront' && cfg.adminVus > 0;
-    boot = bootstrap(catalog.regionId, wantAdminUsers);
+    const catalogSkus = [...catalog.simples, ...catalog.configurables].map((p) => p.sku);
+    boot = bootstrap(catalog.regionId, wantAdminUsers, catalogSkus);
   } else {
     console.warn('ADMIN_USER/ADMIN_PASSWORD not set: customer and admin flows are disabled');
   }

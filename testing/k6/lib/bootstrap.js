@@ -209,11 +209,26 @@ export function ensureAdminUsers(usernames) {
   return users;
 }
 
-export function bootstrap(regionId, needAdminUsers) {
+function resetCatalogStock(token, skus) {
+  if (!skus || !skus.length) return;
+  const qty = 10000;
+  const chunkSize = 100;
+  let reset = 0;
+  for (let i = 0; i < skus.length; i += chunkSize) {
+    const sourceItems = skus.slice(i, i + chunkSize).map((sku) => ({ sku, source_code: 'default', quantity: qty, status: 1 }));
+    const r = rest(token, 'POST', 'inventory/source-items', { sourceItems }, 'SetUp - Reset Stock');
+    if (r.res.status === 200) reset += sourceItems.length;
+    else console.warn(`Stock reset failed for chunk starting at ${skus[i]}: ${r.res.status}`);
+  }
+  console.log(`Stock: reset ${reset}/${skus.length} catalog products to ${qty} units`);
+}
+
+export function bootstrap(regionId, needAdminUsers, catalogSkus) {
   const token = restToken();
   const password = derivedPassword();
   const customers = ensureCustomers(token, password, regionId);
   const products = ensureProducts(token, Math.max(5, cfg.adminVus * 2));
+  resetCatalogStock(token, catalogSkus);
   // admin: null (no admin flows), { shared: true } (every VU uses ADMIN_USER) or
   // { perVu: true } (each admin VU creates/uses k6mlt-admin-<VU id> on first use).
   let admin = null;
