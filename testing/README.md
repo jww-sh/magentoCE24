@@ -26,7 +26,7 @@
 `k6/` is a k6 port of Magento's Performance Toolkit plan (`benchmark.jmx`), plus the
 original random-walk crawler (`magento.js`). It runs locally or as the on-demand
 Upsun task `k6` (see `tasks:` in `.upsun/config.yaml`), so load is generated from
-its own container instead of stealing CPU from the 1-CPU `app` container.
+its own container instead of competing for CPU with the `app` container.
 
 ## What's ported
 
@@ -150,15 +150,15 @@ k6 run -e URL=https://shop.example -e PROFILE=smoke -e THINK_MS=0 \
 ## Variables
 | Name | Default | |
 | --- | --- | --- |
-| `PROFILE` | `combined` | `combined`, `graphql`, `storefront`, `admin`, `crawler`, `smoke`, `cleanup` |
+| `PROFILE` | `combined` | `combined` (storefrontMix + graphqlMix + crawler + varnish + admin), `graphql` (graphqlMix only), `storefront`, `admin`, `crawler`, `smoke`, `cleanup` |
 | `SMOKE_GROUPS` | `web,graphql,admin,varnish` | flow groups the smoke profile runs |
 | `URL` | primary route on Upsun | required locally, e.g. `-e URL=https://shop.example` |
-| `VUS` / `ADMIN_VUS` | `10` / `1` | storefront VUs / admin VUs |
+| `VUS` / `ADMIN_VUS` | `10` / `1` | VUs per scenario / admin VUs. In `combined`, `VUS` drives three parallel scenarios (storefrontMix, graphqlMix, crawler) so total concurrent VUs ≈ 3×VUS + ADMIN_VUS |
 | `RAMP` / `DURATION` / `RAMP_DOWN` | `1m` / `10m` / `30s` | |
 | `THINK_MS` / `THINK_DEVIATION_MS` | `2000` / `1000` | pause between requests |
 | `FPC` | `ON` | `OFF` adds a cache-buster to storefront GETs |
 | `PCT_<FLOW>` | see table | override mix weights, e.g. `PCT_GUEST_CHECKOUT=10` |
-| `CUSTOMER_COUNT` | `20` | keep ≥ storefront VUs so carts don't collide |
+| `CUSTOMER_COUNT` | `max(20, VUS)` | automatically scaled to VUS so each VU gets its own customer account and carts don't collide |
 | `ADMIN_USER` / `ADMIN_PASSWORD` / `ADMIN_PATH` | – / – / `admin` | |
 | `SEARCH_TERMS` | `bag,jacket,...` | comma separated |
 | `ADDRESS_*`, `PAYMENT_METHOD`, `SHIPPING_CARRIER`, `SHIPPING_METHOD` | US / checkmo / flatrate | checkout data |
