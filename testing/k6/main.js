@@ -94,7 +94,15 @@ function scenarios() {
     case 'cleanup':
       return { cleanup: once('cleanupRun') };
     default:
-      return Object.assign({ storefront: storefrontScenario('storefrontMix') }, varnishScenario, withAdmin ? { admin: adminScenario() } : {});
+      return Object.assign(
+        {
+          storefront: storefrontScenario('storefrontMix'),
+          graphql: storefrontScenario('graphqlMix'),
+          crawler: storefrontScenario('crawler'),
+        },
+        varnishScenario,
+        withAdmin ? { admin: adminScenario() } : {}
+      );
   }
 }
 
