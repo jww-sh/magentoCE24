@@ -54,7 +54,7 @@ export const cfg = {
   // Only safe when admin/security/admin_account_sharing=1.
   adminShareAccount: bool('ADMIN_SHARE_ACCOUNT', false),
 
-  customerCount: num('CUSTOMER_COUNT', Math.max(20, vus)),
+  customerCount: num('CUSTOMER_COUNT', Math.max(20, vus * 2.1)),
   maxProducts: num('MAX_PRODUCTS', 400),
   searchTerms: str('SEARCH_TERMS', 'bag,jacket,shirt,pants,watch,yoga,tee,short,hoodie,bra').split(','),
 
