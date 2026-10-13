@@ -29,6 +29,28 @@ If using this project as a reference for your own existing project, replicate th
 * A logrotate and report housekeeping cron have been added.
 * A module which allows two factor authentication to be disabled has been added to `composer.json`.
 
+## Load Testing
+
+The `testing/k6/` directory contains a k6 load test suite modelled on the Magento Performance Toolkit benchmark.
+
+> **WARNING: Never run these tests against a production site.**
+>
+> The test suite makes permanent, wide-ranging changes to the Magento database:
+>
+> - **Customers** — creates up to `CUSTOMER_COUNT` (default: equal to `VUS`) real customer accounts with addresses.
+> - **Orders** — places real guest and customer orders through the full checkout flow, consuming stock and creating order records that cannot be deleted via the API (only cancelled).
+> - **Stock levels** — resets inventory quantities on all discovered catalog products to 10,000 units at the start of every run.
+> - **Admin users** — creates one admin account per admin VU (`k6mlt-admin-N`) unless `ADMIN_SHARE_ACCOUNT=1`.
+> - **Products** — creates hidden simple products for admin edit flows.
+> - **Search terms** — adds every configured search term to the search term table.
+> - **Sessions & carts** — generates large numbers of guest quote records and customer sessions.
+>
+> Running this against a live store will corrupt real customer data, destroy real stock levels, flood the order grid with test orders, and may cause the site to behave incorrectly for real shoppers.
+>
+> **Always run load tests on a dedicated staging or development environment with no real customer data.**
+>
+> Run `PROFILE=cleanup` after testing to cancel orders, restore shipped stock, and remove test data. Some data (orders, quote records, visitor logs) requires the companion `testing/k6/cleanup-orders.php` script to be deleted from the database directly.
+
 ## References
 
 * [Adobe Commerce Docs](https://experienceleague.adobe.com/en/docs/commerce)

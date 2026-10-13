@@ -1,5 +1,28 @@
 # Magento load testing (k6)
 
+> ⚠️ **DO NOT RUN AGAINST A PRODUCTION SITE.**
+>
+> This test suite makes destructive, wide-ranging changes to the Magento database that
+> cannot be fully reversed through the API alone:
+>
+> - **Stock levels** are reset to 10,000 units on every discovered catalog product at the
+>   start of every run — overwriting real stock figures permanently.
+> - **Real orders** are placed through the full checkout flow (guest and customer),
+>   consuming stock, incrementing order number sequences, and creating order records that
+>   Magento Open Source cannot delete via REST (only cancel).
+> - **Customer accounts** (`k6mlt-user-N@example.local`) and **admin users**
+>   (`k6mlt-admin-N`) are created in the live database.
+> - **Guest carts, sessions, visitor logs and search terms** are generated in large
+>   numbers under load.
+> - **Admin flows** invoice, ship and refund k6 orders — triggering real MSI stock
+>   movements and email queuing.
+>
+> Running this against a live store will corrupt real stock levels, pollute the order
+> grid and customer list, and may degrade the experience for real shoppers while the
+> test is running. **Always use a dedicated staging or development environment with no
+> real customer data.** Run `PROFILE=cleanup` followed by `cleanup-orders.php` after
+> every test run to remove as much test data as possible (see Cleanup below).
+
 `k6/` is a k6 port of Magento's Performance Toolkit plan (`benchmark.jmx`), plus the
 original random-walk crawler (`magento.js`). It runs locally or as the on-demand
 Upsun task `k6` (see `tasks:` in `.upsun/config.yaml`), so load is generated from
