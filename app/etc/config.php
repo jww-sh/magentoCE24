@@ -462,7 +462,7 @@ return [
         'Magento_WishlistGraphQl' => 1,
         'Fastly_Cdn' => 1,
         'MarkShust_DisableTwoFactorAuth' => 1,
-        'PayPal_Braintree' => 0, #causing issues with the admin backend as per https://magento.stackexchange.com/questions/256571/how-to-create-a-magento-2-patch
+        'PayPal_Braintree' => 1,
         'PayPal_BraintreeCustomerBalance' => 1,
         'PayPal_BraintreeGiftCardAccount' => 1,
         'PayPal_BraintreeGiftWrapping' => 1,
