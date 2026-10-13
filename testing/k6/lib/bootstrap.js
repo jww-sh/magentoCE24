@@ -209,6 +209,38 @@ export function ensureAdminUsers(usernames) {
   return users;
 }
 
+// Fetch every non-k6 simple SKU from the admin API regardless of stock status.
+// discover() only surfaces IN_STOCK products, so products that hit 0 in a prior
+// run would be invisible to it and never get reset — this avoids that blind spot.
+function fetchAllSimpleSkus(token) {
+  const skus = [];
+  const pageSize = 500;
+  let page = 1;
+  let pages = 1;
+  while (page <= pages) {
+    const q = qs({
+      'searchCriteria[filterGroups][0][filters][0][field]': 'type_id',
+      'searchCriteria[filterGroups][0][filters][0][value]': 'simple',
+      'searchCriteria[filterGroups][0][filters][0][conditionType]': 'eq',
+      'searchCriteria[filterGroups][1][filters][0][field]': 'sku',
+      'searchCriteria[filterGroups][1][filters][0][value]': `${PREFIX}-%`,
+      'searchCriteria[filterGroups][1][filters][0][conditionType]': 'nlike',
+      'searchCriteria[pageSize]': pageSize,
+      'searchCriteria[currentPage]': page,
+      fields: 'items[sku],total_count',
+    });
+    const r = rest(token, 'GET', `products?${q}`, null, 'SetUp - All Simple SKUs');
+    if (!r.body || !r.body.items) {
+      console.warn(`fetchAllSimpleSkus: page ${page} failed (${r.res.status})`);
+      break;
+    }
+    for (const p of r.body.items) skus.push(p.sku);
+    pages = Math.ceil((r.body.total_count || 0) / pageSize);
+    page++;
+  }
+  return skus;
+}
+
 function resetCatalogStock(token, skus) {
   if (!skus || !skus.length) return;
   const qty = 100000;
@@ -228,7 +260,10 @@ export function bootstrap(regionId, needAdminUsers, catalogSkus) {
   const password = derivedPassword();
   const customers = ensureCustomers(token, password, regionId);
   const products = ensureProducts(token, Math.max(5, cfg.adminVus * 2));
-  resetCatalogStock(token, catalogSkus);
+  // Fetch all simple SKUs directly so out-of-stock products from prior runs are included.
+  // catalogSkus (from discover) only has IN_STOCK products and would miss them.
+  const allSkus = fetchAllSimpleSkus(token);
+  resetCatalogStock(token, allSkus.length ? allSkus : catalogSkus);
   // admin: null (no admin flows), { shared: true } (every VU uses ADMIN_USER) or
   // { perVu: true } (each admin VU creates/uses k6mlt-admin-<VU id> on first use).
   let admin = null;

@@ -83,7 +83,8 @@ export function guestCheckout(data) {
       'Checkout Place Order',
       { headers: REFERER, expect: [orderPlaced('Place Order')] }
     );
-    if (order.status === 200) ordersPlaced.add(1, { flow: 'guest' });
+    if (order.status !== 200) return;
+    ordersPlaced.add(1, { flow: 'guest' });
     get('checkout/onepage/success/', 'Checkout Success', { noBust: true, expect: ['Thank you for your purchase!'] });
   });
 }
@@ -144,7 +145,11 @@ export function customerCheckout(data) {
       'Checkout Place Order',
       { headers: REFERER, expect: [orderPlaced('Place Order')] }
     );
-    if (order.status === 200) ordersPlaced.add(1, { flow: 'customer' });
+    if (order.status !== 200) {
+      customerLogout();
+      return;
+    }
+    ordersPlaced.add(1, { flow: 'customer' });
     get('checkout/onepage/success/', 'Checkout Success', { noBust: true, expect: ['Thank you for your purchase!'] });
     customerLogout();
   });
