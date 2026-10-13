@@ -54,7 +54,7 @@ const loadStages = [
 ];
 
 function storefrontScenario(exec) {
-  return { executor: 'ramping-vus', exec, startVUs: 0, stages: loadStages, gracefulRampDown: '30s' };
+  return { executor: 'ramping-vus', exec, startVUs: 0, stages: loadStages, gracefulRampDown: '90s', gracefulStop: '100s' };
 }
 
 function adminScenario() {
@@ -67,16 +67,17 @@ function adminScenario() {
       { duration: cfg.duration, target: cfg.adminVus },
       { duration: cfg.rampDown, target: 0 },
     ],
-    gracefulRampDown: '60s',
+    gracefulRampDown: '90s',
+    gracefulStop: '100s',
   };
 }
 
 function once(exec) {
-  return { executor: 'per-vu-iterations', exec, vus: 1, iterations: 1, maxDuration: '30m' };
+  return { executor: 'per-vu-iterations', exec, vus: 1, iterations: 1, maxDuration: '30m', gracefulStop: '100s' };
 }
 
 // Varnish cache checks run once alongside every load profile (and inside smoke)
-const varnishScenario = { varnish: { executor: 'per-vu-iterations', exec: 'varnish', vus: 1, iterations: 1, maxDuration: '3m' } };
+const varnishScenario = { varnish: { executor: 'per-vu-iterations', exec: 'varnish', vus: 1, iterations: 1, maxDuration: '3m', gracefulStop: '100s' } };
 
 function scenarios() {
   const withAdmin = hasAdmin() && cfg.adminVus > 0;
