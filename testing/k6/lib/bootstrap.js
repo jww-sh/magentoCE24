@@ -255,6 +255,51 @@ function resetCatalogStock(token, skus) {
   console.log(`Stock: reset ${reset}/${skus.length} catalog products to ${qty} units`);
 }
 
+// Saleable qty = physical_qty - sum(reservations). Orders placed in prior runs leave
+// positive reservations behind; without compensating them, saleable qty drifts below
+// zero even after the source-item reset. This appends negative reservations to cancel
+// all existing positives, restoring full saleable qty.
+function compensateReservations(token, skus) {
+  if (!skus || !skus.length) return;
+  const skuSet = new Set(skus);
+  // Fetch all open reservations for catalog SKUs
+  const pageSize = 500;
+  let page = 1;
+  let pages = 1;
+  const totals = {}; // sku -> net reservation quantity
+  while (page <= pages) {
+    const q = qs({
+      'searchCriteria[pageSize]': pageSize,
+      'searchCriteria[currentPage]': page,
+    });
+    const r = rest(token, 'GET', `inventory/reservations?${q}`, null, 'SetUp - Fetch Reservations');
+    if (!r.body || !r.body.items) break;
+    for (const item of r.body.items) {
+      if (!skuSet.has(item.sku)) continue;
+      totals[item.sku] = (totals[item.sku] || 0) + item.quantity;
+    }
+    pages = Math.ceil((r.body.total_count || 0) / pageSize);
+    page++;
+  }
+  // Post compensation reservations for any SKU with a net positive total
+  const compensations = Object.entries(totals)
+    .filter(([, q]) => q > 0)
+    .map(([sku, q]) => ({ sku, quantity: -q, metadata: { event_type: 'k6_reset', object_type: 'order', object_id: '0', object_increment_id: '0' } }));
+  if (!compensations.length) {
+    console.log('Reservations: nothing to compensate');
+    return;
+  }
+  const chunkSize = 100;
+  let compensated = 0;
+  for (let i = 0; i < compensations.length; i += chunkSize) {
+    const chunk = compensations.slice(i, i + chunkSize);
+    const r = rest(token, 'POST', 'inventory/reservations', { reservations: chunk }, 'SetUp - Compensate Reservations');
+    if (r.res.status === 200) compensated += chunk.length;
+    else console.warn(`Reservation compensation failed for chunk at ${i}: ${r.res.status} ${r.res.body}`);
+  }
+  console.log(`Reservations: compensated ${compensated}/${compensations.length} SKUs`);
+}
+
 export function bootstrap(regionId, needAdminUsers, catalogSkus) {
   const token = restToken();
   const password = derivedPassword();
@@ -264,6 +309,7 @@ export function bootstrap(regionId, needAdminUsers, catalogSkus) {
   // catalogSkus (from discover) only has IN_STOCK products and would miss them.
   const allSkus = fetchAllSimpleSkus(token);
   resetCatalogStock(token, allSkus.length ? allSkus : catalogSkus);
+  compensateReservations(token, allSkus.length ? allSkus : catalogSkus);
   // admin: null (no admin flows), { shared: true } (every VU uses ADMIN_USER) or
   // { perVu: true } (each admin VU creates/uses k6mlt-admin-<VU id> on first use).
   let admin = null;
