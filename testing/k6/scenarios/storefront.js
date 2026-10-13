@@ -9,8 +9,14 @@ import { derivedPassword } from '../lib/bootstrap.js';
 
 const IN_STOCK = '<span>In stock</span>';
 
+// Offset each scenario into a different slice of the customer pool so concurrent
+// scenarios (storefront + graphql) don't log in as the same customer simultaneously.
+const SCENARIO_OFFSETS = { storefront: 0, graphql: 0.5 };
+
 export function customerFor(data) {
-  return data.customers[(exec.vu.idInTest - 1) % data.customers.length];
+  const n = data.customers.length;
+  const offset = Math.floor((SCENARIO_OFFSETS[exec.scenario.name] || 0) * n);
+  return data.customers[(offset + exec.vu.idInTest - 1) % n];
 }
 
 export function home() {
