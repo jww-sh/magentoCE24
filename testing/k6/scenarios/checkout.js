@@ -30,14 +30,17 @@ function address(data, firstname, lastname) {
 // Clears all items from the customer's server-side cart before adding fresh ones.
 // Without this, a failed checkout leaves items behind; the next iteration adds on
 // top, causing unexpected item counts and "shipping method missing" cascades.
+const REST_HEADERS = { 'Content-Type': 'application/json', Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' };
+
 function clearCustomerCart() {
-  const res = get('rest/default/V1/carts/mine/items', 'Cart Clear - Get Items', { noBust: true });
+  const res = get('rest/default/V1/carts/mine/items', 'Cart Clear - Get Items', { noBust: true, headers: REST_HEADERS });
+  if (res.status !== 200) return;
   let items = [];
   try { items = JSON.parse(res.body || '[]'); } catch (e) {}
   if (!Array.isArray(items)) return;
   for (const item of items) {
     http.del(url(`rest/default/V1/carts/mine/items/${item.item_id}`), null, {
-      headers: { 'Content-Type': 'application/json' },
+      headers: REST_HEADERS,
       tags: { name: 'Cart Clear - Delete Item' },
     });
   }
