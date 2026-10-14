@@ -4,7 +4,7 @@ import http from 'k6/http';
 import exec from 'k6/execution';
 import { group } from 'k6';
 import { cfg, taggedEmail } from '../lib/config.js';
-import { get, postJson, think, match, initFormKey, ordersPlaced, url } from '../lib/http.js';
+import { get, postJson, think, match, initFormKey, ordersPlaced, url, baseHeaders } from '../lib/http.js';
 import { home, category, addProductsToCart, customerLogin, customerLogout } from './storefront.js';
 
 const REFERER = { Referer: `${cfg.baseUrl}/checkout/` };
@@ -40,7 +40,7 @@ function clearCustomerCart() {
   if (!Array.isArray(items)) return;
   for (const item of items) {
     http.del(url(`rest/default/V1/carts/mine/items/${item.item_id}`), null, {
-      headers: REST_HEADERS,
+      headers: Object.assign(baseHeaders(), REST_HEADERS),
       tags: { name: 'Cart Clear - Delete Item' },
     });
   }
