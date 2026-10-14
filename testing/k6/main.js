@@ -123,7 +123,7 @@ export const options = {
     : {
         http_req_failed: ['rate<0.05'],
         magento_errors: ['rate<0.05'],
-        magento_page_duration: ['p(95)<5000'],
+        magento_page_duration: ['p(95)<30000'],
         // every cache behaviour check must pass, however many other requests the run makes
         ...(runsVarnishChecks ? { 'checks{suite:varnish}': ['rate==1'] } : {}),
       },

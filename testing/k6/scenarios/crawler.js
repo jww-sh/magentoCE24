@@ -43,6 +43,14 @@ function cleanUrl(rawHref, baseUrl) {
     return null;
   }
 
+  // Skip URLs with more than 2 query parameters — heavily filtered/paginated pages
+  // add noise without meaningful coverage. URLs with 0-2 params are allowed.
+  const qMark = fullUrl.indexOf('?');
+  if (qMark !== -1) {
+    const paramCount = fullUrl.slice(qMark + 1).split('&').filter(Boolean).length;
+    if (paramCount > 2) return null;
+  }
+
   // Exclude non-image static assets/media, logout actions, and cart deletions
   // NOTE: Images (.png, .jpg, .jpeg, .gif, .svg, .webp) are ALLOWED to support dynamic image generation testing
   if (
@@ -53,7 +61,7 @@ function cleanUrl(rawHref, baseUrl) {
     return null;
   }
 
-  // Strip query parameters, hash fragments, and trailing slashes for clean matching
+  // Strip query parameters and hash fragments, deduplicate by clean path
   const urlWithoutQuery = fullUrl.split('?')[0].split('#')[0];
   return urlWithoutQuery.replace(/\/$/, '');
 }
